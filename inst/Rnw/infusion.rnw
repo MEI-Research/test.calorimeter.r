@@ -1,0 +1,89 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{fixltx2e}
+\usepackage{xcolor}
+\usepackage[font=sf]{caption}
+\usepackage[font=sf]{floatrow}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=1.0cm,rmargin=1.5cm}
+\setlength{\floatsep}{24pt plus 4pt minus 4pt}
+
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+library(xtable)
+library(plyr) 
+
+infusion <- data$infusion
+infusion$date <- as.POSIXct(as.character(infusion$start_time))
+
+dates <- format(infusion$date, "%Y-%m-%d") %>% unique %>% setdiff(NA)
+
+subject <- infusion$pt[1]
+chamber_id <- ""
+study_id <- ""
+now <- Sys.time()
+
+config  <- pilr.utils.r::get_setting("configuration", params$settings)
+
+volume  <- pilr.utils.r::get_setting("volume", params$settings) %>%
+    pilr.utils.r::safe_numeric()
+
+N2_MFC  <- pilr.utils.r::get_setting("N2_MFC", params$settings)
+
+CO2_MFC <- pilr.utils.r::get_setting("CO2_MFC", params$settings)
+
+null_offset_O2 <- infusion$null_offset_o2 %>% unique %>% setdiff(NA)
+null_offset_CO2 <- infusion$null_offset_co2 %>% unique %>% setdiff(NA)
+
+@
+
+\section*{Infusion Validation Report}
+
+\begin{tabular}{ll}
+
+Subject ID: \verb|\Sexpr{subject}| & \\
+Date: \verb|\Sexpr{dates}| & 
+Chamber ID: \verb|\Sexpr{chamber_id}| \\
+Study ID: \verb|\Sexpr{study_id}| &  \\ 
+Report Generated At: \verb|\Sexpr{now}| & \\
+\end{tabular}
+
+
+\section*{Study Information}
+
+<<infusion_table, results="asis", echo = FALSE, warnings = FALSE, message = FALSE>>=
+
+infusion_names <- c("tag_label", "start_time", "end_time", "vo2_exp", "vo2_meas", 
+                    "vco2_meas", "vco2_exp", "ee_meas", "ee_exp", 
+                    "rq_meas", "rq_exp", "vo2_err", "vco2_err", "ee_err", 
+                    "rq_err")
+
+inf_table <- subset(infusion, tag_label != "Null", 
+                    select = infusion_names)
+inf_table$tag_label <- as.character(inf_table$tag_label)
+
+## rearrange for table output format.
+
+inf_table <- adply(inf_table, 1, function(x) {
+    data.frame(Tag = c(x$tag_label, "", ""),
+               Measure = c("Exp", "Avg", "Err"),
+               VO2 = c(x$vo2_exp, x$vo2_meas, x$vo2_err),
+               VCO2 = c(x$vco2_exp, x$vco2_meas, x$vco2_err),
+               MR = c(x$ee_exp, x$ee_meas, x$ee_err),
+               RQ = c(x$rq_exp, x$rq_meas, x$rq_err))
+})[c("Tag", "Measure", "VO2", "VCO2", "MR", "RQ")]
+
+
+print(xtable(inf_table, digits = 4), include.rownames = FALSE)
+@ 
+
+\section*{Setup}
+
+\begin{tabular}{ll}
+  
+  Calorimeter Configuration: \Sexpr{config}& Chamber Volume: \Sexpr{volume}\\ 
+  O2 Null Correction \Sexpr{null_offset_O2}& CO2 Null Correction: \Sexpr{null_offset_CO2}\\
+  MFC N2 Setting: \Sexpr{N2_MFC} & MFC CO2 Setting: \Sexpr{CO2_MFC}
+\end{tabular}
+\end{document}

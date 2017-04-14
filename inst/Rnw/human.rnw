@@ -1,0 +1,162 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{fixltx2e}
+\usepackage{xcolor}
+\usepackage{lmodern}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+
+\renewcommand*{\familydefault}{\sfdefault}
+
+
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+library(knitr)
+library(opencpu)
+
+# set global chunk options
+## opts_chunk$set(fig.path=paste0(opencpu:::gettmpdir(), "/"), fig.align='center', fig.show='hold')
+options(replace.assign=TRUE,width=90)
+
+human <- data$human
+chamber_id <- ""
+
+settings <- params$settings
+
+human$start_time <- as.POSIXct(human$start_time, format = "%Y-%m-%dT%H:%M:%SZ")
+human$end_time <- as.POSIXct(human$end_time, format = "%Y-%m-%dT%H:%M:%SZ")
+
+## NB: check this with Erica
+options(digits = 2)
+
+chamber <- pilr.utils.r::get_setting("chamber", settings,
+                                     required = FALSE) %>%
+    pilr.utils.r::safe_numeric()
+
+study_id <- pilr.utils.r::get_setting("study_id", settings,
+                                     required = FALSE) 
+
+visit_id <- pilr.utils.r::get_setting("visit_id", settings,
+                                     required = FALSE)
+
+weight_in <- pilr.utils.r::get_setting("weight_in", settings,
+                                     required = FALSE) %>%
+    pilr.utils.r::safe_numeric()
+
+weight_out <- pilr.utils.r::get_setting("weight_out", settings,
+                                     required = FALSE) %>%
+    pilr.utils.r::safe_numeric()
+
+energy_intake_predicted <- pilr.utils.r::get_setting("energy_intake_predicted", settings,
+                                     required = FALSE) %>%
+    pilr.utils.r::safe_numeric()
+
+energy_intake_measured <- pilr.utils.r::get_setting("energy_intake_measured", settings,
+                                     required = FALSE) %>%
+    pilr.utils.r::safe_numeric()
+
+diet <- pilr.utils.r::get_setting("diet", settings,
+                                     required = FALSE) 
+
+
+exercise_level <- pilr.utils.r::get_setting("exercise_level", settings,
+                                     required = FALSE) 
+
+
+treatment <- pilr.utils.r::get_setting("treatment", settings,
+                                     required = FALSE) 
+
+
+configuration <- pilr.utils.r::get_setting("configuration", settings,
+                                     required = FALSE) 
+
+chamber_volume <- pilr.utils.r::get_setting("volume", settings,
+                                     required = FALSE) %>%
+    pilr.utils.r::safe_numeric()
+
+predicted_energy_balance <- pilr.utils.r::get_setting("predicted_energy_balance", settings,
+                                     required = FALSE) %>%
+    pilr.utils.r::safe_numeric()
+
+read_interval <- pilr.utils.r::get_setting("read_interval", settings,
+                                     required = FALSE) %>%
+    pilr.utils.r::safe_numeric()
+
+subject <- human$pt[1]
+
+@
+
+\section*{Human Study Report}
+
+\begin{tabular}{ll}
+Date: \verb|\Sexpr{as.Date(human$start_time[1])}| & 
+Chamber: \verb|\Sexpr{chamber}| \\
+Subject ID: \verb|\Sexpr{subject}| & Study ID: \verb|\Sexpr{study_id}| \\ 
+Visit ID:   \verb|\Sexpr{visit_id}|
+\end{tabular}
+
+\section*{Participant Information}
+
+\begin{tabular}{ll}
+Weight In (Kg): \Sexpr{weight_in} & Weight Out (Kg): \Sexpr{weight_out}\\
+Predicted Energy Intake (kCal): \Sexpr{energy_intake_predicted} & Measured Energy Intake (kCal): \Sexpr{energy_intake_measured}\\
+Diet: \verb|\Sexpr{diet}| & Exercise Level: \verb|\Sexpr{exercise_level}| \\
+Treatment: \verb|\Sexpr{treatment}| \\
+\end{tabular}
+
+\section*{Study Information}
+<<human_table, results="asis", echo = FALSE, warnings = FALSE, message = FALSE>>=
+library(xtable)
+human_sub <- human[c("tag_label", "vo2", "vco2", "ee", "mr", "rq", "np_rq", "cho_ox", "fat_ox", "protein_ox")]
+human_sub <- subset(human_sub, human_sub$tag_label != "TT_null_period")
+names(human_sub) <- c("Tag Label", "VO2", "VCO2", "EE", "MR", "RQ", "np_rq", "Cho_Ox", "Fat_Ox", "Pro_Ox")
+print(xtable(human_sub), include.rownames=FALSE) 
+@
+
+\begin{tabular}{lll}
+  Predicted Energy Balance (kCal): \Sexpr{predicted_energy_balance}&
+  Measured Energy Balance (kCal): \Sexpr{human$eb_measured[1]}  &
+  SPA: \Sexpr{human$spa[1]}\\
+\end{tabular}
+
+\section*{Setup}
+
+\begin{tabular}{ll}
+  Calorimeter Configuration: \Sexpr{configuration}&
+  Chamber Volume: \Sexpr{chamber_volume}\\
+  Data Log Rate: \Sexpr{read_interval}\\
+  O2 Null Correction \Sexpr{sprintf('%4f', human$null_offset_o2[1])}&
+  CO2 Null Correction: \Sexpr{sprintf('%4f', human$null_offset_co2[1])}\\
+\end{tabular}
+\pagebreak
+
+
+\section*{Figures}
+
+<<figures, echo=FALSE, warnings=FALSE, message=FALSE, fig.width=7, fig.height=4>>=
+library(ggplot2)
+library(scales)
+library(pilr.utils.r)
+
+haldane <- data$haldane
+haldane$Time <- as.POSIXct(haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")
+
+event_tags  <- data$event_tags
+event_tags <- event_tags[order(event_tags$start_time), ]
+tag_table <- pilr.utils.r::apply_event_tags(haldane$Time, event_tags)
+
+## note that we can't use the space in 'Human Study', why is that?
+plot_data <- subset_event_tags("HumanStudy", haldane, tag_table)
+
+ggplot(plot_data, aes(x = Time, y = recalc_ee)) + geom_point() + 
+    theme_bw() + 
+    scale_x_datetime()
+
+ggplot(plot_data, aes(x = Time, y = recalc_rq)) + geom_point() + 
+    theme_bw() + 
+    scale_x_datetime()
+
+@
+
+\end{document}

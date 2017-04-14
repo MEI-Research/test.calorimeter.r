@@ -1,0 +1,89 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{fixltx2e}
+\usepackage{xcolor}
+\usepackage[font=sf]{caption}
+\usepackage[font=sf]{floatrow}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=1.0cm,rmargin=1.5cm}
+\setlength{\floatsep}{24pt plus 4pt minus 4pt}
+
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+library(plyr)
+library(xtable)
+
+burn <- data$burn
+settings <- params$report_params$settings
+
+burn$start_time <- as.POSIXct(as.character(burn$start_time, format = "%Y-%m-%d %H:%M:%S"))
+burn$end_time <- as.POSIXct(as.character(burn$end_time, format = "%Y-%m-%d %H:%M:%S"))
+
+subject <- burn$pt[1]
+chamber_id <- ""
+study_id <- ""
+dates <- unique(as.Date(burn$start_time)) 
+
+@
+
+\section*{Burn Validation Report}
+
+\begin{tabular}{ll}
+
+  Subject ID : \verb|\Sexpr{subject}| & \\
+  Date: \verb|\Sexpr{dates }| & 
+  Chamber ID: \verb|\Sexpr{chamber_id}| \\
+  Study ID: \verb|\Sexpr{study_id}| &  \\ 
+  Report Generated At: \verb|\Sexpr{Sys.time()}| & \\
+  
+\end{tabular}
+
+\section*{Study Information}
+
+<<burn_table1, results="asis", echo = FALSE, warnings = FALSE, message = FALSE>>=
+
+
+burn_sub <- subset(burn, burn$tag_label != "Null")
+burn_sub$start_time <- as.character(burn_sub$start_time)
+burn_sub$end_time <- as.character(burn_sub$end_time)
+burn_sub <- burn_sub[c("start_time", "end_time", "vo2_exp", "vo2_meas", 
+                    "vco2_meas", "vco2_exp", 
+                    "vco2_err", "vo2_err")]
+save <- burn_sub
+
+names(burn_sub) <- c("Start Time", "End Time", "VO2 Exp", "VO2 Meas", 
+                    "VCO2 Meas", "VCO2 Exp", 
+                    "VCO2 Err", "VO2 Err")
+## print(xtable(burn_sub), include.rownames=FALSE) 
+
+burn_sub2 <- 
+    data.frame(Measure = c("Expected (Total)", "Measured (Total)", "Recovery"),
+               VO2 = c(save$vo2_exp, save$vo2_meas, save$vo2_err),
+               VCO2 = c(save$vco2_exp, save$vco2_meas, save$vco2_err))
+
+config  <- pilr.utils.r::get_setting("configuration", params$settings)
+volume  <- pilr.utils.r::get_setting("volume", params$settings) %>% pilr.utils.r::safe_numeric()
+gas_type  <- pilr.utils.r::get_setting("gas", params$settings)
+
+null_offset_o2 <- burn$null_offset_o2 %>% unique %>% setdiff(NA)
+null_offset_co2 <- burn$null_offset_co2 %>% unique %>% setdiff(NA)
+
+print(xtable(burn_sub2, digits = 4), include.rownames=FALSE) 
+
+@
+
+\section*{Setup}
+
+\begin{tabular}{ll}
+  
+  Calorimeter Configuration: \Sexpr{config} & 
+  Chamber Volume: \Sexpr{volume} \\ 
+  O2 Null Correction: \Sexpr{null_offset_o2} &
+  CO2 Null Correction: \Sexpr{null_offset_co2} \\
+  Fuel Type: \Sexpr{gas_type} & \\
+  
+\end{tabular}
+
+
+\end{document}
