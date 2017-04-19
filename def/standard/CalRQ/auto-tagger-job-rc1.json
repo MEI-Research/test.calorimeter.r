@@ -1,0 +1,157 @@
+{
+    "definition_type":"job",
+    "code":"auto_tagger_job_rc1",
+    "name":"Auto Tagger Job RC1",
+    "version":1,
+    "description":"Automatically create event tags.",
+    "datasets":[
+        {
+            "name":"Tagged Events",
+            "code":"pilrhealth:time_analysis:tagged_event",
+            "schemas":[
+                {
+                    "type":"concordia",
+                    "name":"remove",
+					"code":"remove",
+                    "schemaVersion":1,
+                    "specification":{
+                        "type":"object",
+                        "fields":[
+                            {
+                                "name":"number",
+                                "type":"number",
+                                "label":"Event Number",
+                                "doc":"A unique identifier for an event."
+                            },
+                            {
+                                "category":"date",
+                                "name":"start_time",
+                                "type":"string",
+                                "label":"Event Start Time",
+                                "doc":"The date and time of the start of the event."
+                            },
+                            {
+                                "category":"date",
+                                "name":"end_time",
+                                "type":"string",
+                                "label":"Event End Time",
+                                "doc":"The date and time of the end of the event."
+                            },
+                            {
+                                "name":"note",
+                                "type":"string",
+                                "optional":true,
+                                "label":"Tag Note",
+                                "doc":"Arbitrary notes on the event or tags."
+                            },
+                            {
+                                "constType":{
+                                    "type":"string"
+                                },
+                                "name":"tags",
+                                "type":"array",
+                                "label":"List of Tags",
+                                "doc":"One or more tags that label the event."
+                            },
+                            {
+                                "name":"verified",
+                                "type":"boolean",
+                                "label":"Tag Verified",
+                                "doc":"Has this event been verified?"
+                            },
+                            {
+                                "name":"profile_code",
+                                "type":"string",
+                                "optional":true,
+                                "label":"Profile Code",
+                                "doc":"The profile code from which the event was created."
+                            },
+                            {
+                                "name":"profile_version",
+                                "type":"number",
+                                "optional":true,
+                                "label":"Profile Version",
+                                "doc":"The version of the profile code from which the event was created."
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "runner":{
+        "clazz":"com.pilrhealth.tools.processing_with_r.RProcOpenCPUJobRunner",
+        "save_request":0,
+        "save_response":0,
+        "delete_if_successful":0,
+        "package_version":"v1.0.0",
+        "package_url":"https://github.com/eruud/test.calorimeter.r",
+        "package_function":"calc_event_tags",
+        "resource_path":"/github/MeiResearchLtd/pilr.dpu.r/R/pilr_dpu",
+        "input_datasets":[
+            {
+                "code":"pilrhealth:calrq:calrq_data",
+                "version":1,
+                "mapping":"calrq"
+            },
+            {
+                "code":"pilrhealth:time_analysis:tagged_event",
+                "version":1,
+                "mapping":"event_tags"
+            }
+        ],
+        "input_file_types":[
+
+        ],
+        "input_settings":[
+            {
+                "code":"pilrhealth:calrq:read_interval",
+                "mapping":"read_interval"
+            },
+            {
+                "code":"pilrhealth:calrq:configuration",
+                "mapping":"configuration"
+            },
+            {
+                "code":"pilrhealth:calrq:chamber_volume",
+                "mapping":"volume"
+            },
+            {
+                "code":"pilrhealth:calrq:co2_mfc",
+                "mapping":"CO2_MFC"
+            },
+            {
+                "code":"pilrhealth:calrq:n2_mfc",
+                "mapping":"N2_MFC"
+            },
+            {
+                "code":"pilrhealth:calrq:in_o2",
+                "mapping":"in_o2"
+            },
+            {
+                "code":"pilrhealth:calrq:in_co2",
+                "mapping":"in_co2"
+            }
+        ],
+        "filter_params":[
+            "participant",
+            "date_range",
+            "period"
+        ],
+        "input_params":[
+
+        ],
+        "output_datasets":[
+            {
+                "code":"pilrhealth:time_analysis:tagged_event",
+                "version":1,
+                "mapping":"event_tags"
+            }
+        ],
+        "output_file_types":[
+            {
+
+            }
+        ]
+    }
+}
