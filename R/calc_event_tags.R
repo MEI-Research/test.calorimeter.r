@@ -29,9 +29,6 @@ calc_event_tags <- function(data, params, ...) {
   units(cal_seconds) <- "secs"
   cal_seconds <- as.numeric(cal_seconds)
   
-  # Initalize a vector for storing data about breakpoints we find in the MFC data
-  processing <- matrix(FALSE, length(data$calrq[,1]),numMFC)
-  
   # Find out how many MFCs are present in file (up to 4, sequentially)
   # return as numMFC
   for (i in 1:4)
@@ -41,6 +38,9 @@ calc_event_tags <- function(data, params, ...) {
       numMFC <- i
     }
   }
+  
+  # Initalize a vector for storing data about breakpoints we find in the MFC data
+  processing <- matrix(FALSE, length(data$calrq[,1]),numMFC)
   
   # For each MFC, find out when it is in use
   for (i in 1:numMFC)
