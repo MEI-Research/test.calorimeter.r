@@ -252,8 +252,7 @@ calc_event_tags <- function(data, params, ...) {
   }
   
   # Return event tags
-  ret <- list()
-  ret$event_tags <- event_tags
-  
-  as.data.frame(ret)
+  files <- list()
+  datasets <- list(event_tags = event_tags)
+  list(datasets = datasets, files = files)
 }
