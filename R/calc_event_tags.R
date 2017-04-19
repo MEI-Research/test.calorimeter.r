@@ -127,7 +127,7 @@ calc_event_tags <- function(data, params, ...) {
   
   # Calibration processing
   # Cycle through MFCs
-  for (i in 1:length(MFCpts[1,]))
+  for (i in 1:numMFC)
   {
     # non-NA data
     breaks <- MFCpts[!is.na(MFCpts[,i]),i]
