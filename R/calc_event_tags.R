@@ -24,6 +24,18 @@ calc_event_tags <- function(data, params, ...) {
   # Limit for zero
   zero_limit = .002
   
+  data_interval = 60
+  derivative_window = 8
+  
+  #data_interval <- pilr.utils.r::get_setting("data_interval", params$settings,
+  #                                           required = FALSE) %>%
+  #  pilr.utils.r::safe_numeric()
+  #
+  #derivative_window <- pilr.utils.r::get_setting("deriv_window", params$settings,
+  #                                               required = FALSE) %>%
+  #  pilr.utils.r::safe_numeric()
+  
+  
   # cal_seconds <- pilr.utils.r::get_setting("read_interval", params$settings) %>% pilr.utils.r::safe_numeric()
   cal_seconds <- median(diff(as.POSIXlt(data$calrq$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
   units(cal_seconds) <- "secs"
