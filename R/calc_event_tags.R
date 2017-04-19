@@ -252,6 +252,7 @@ calc_event_tags <- function(data, params, ...) {
   }
   
   # Return event tags
+  ret <- list()
   ret$event_tags <- event_tags
   
   as.data.frame(ret)
