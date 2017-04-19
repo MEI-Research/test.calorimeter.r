@@ -76,7 +76,8 @@ deriv_haldane <- function(data, params, ...) {
   #cal_seconds <- pilr.utils.r::get_setting("read_interval",
   #                                         params$settings) %>%
   #  pilr.utils.r::safe_numeric()
-  cal_seconds <- median(diff(as.POSIXlt(data$calrq$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
+  cal_seconds <- median(diff(as.POSIXlt(haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
+  # cal_seconds <- median(diff(as.POSIXlt(data$calrq$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
   units(cal_seconds) <- "secs"
   cal_seconds <- as.numeric(cal_seconds)
   

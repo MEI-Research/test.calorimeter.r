@@ -124,10 +124,10 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
     vco2_exp <- 1.104
     
     # Create array of mean MFC values
-    mfcarray <- c(mean(data$calrq$MFCFlow_1),
-                  mean(data$calrq$MFCFlow_2),
-                  mean(data$calrq$MFCFlow_3),
-                  mean(data$calrq$MFCFlow_4))
+    mfcarray <- c(mean(as.numeric(data$calrq$MFCFlow_1)),
+                  mean(as.numeric(data$calrq$MFCFlow_2)),
+                  mean(as.numeric(data$calrq$MFCFlow_3)),
+                  mean(as.numeric(data$calrq$MFCFlow_4)))
     
     # If CO2 MFC is not set, set to second largest flow
     if (!length(settings$CO2_MFC$value)){
