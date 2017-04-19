@@ -1,5 +1,6 @@
 ## this is our entry point from opencpu
 #'@export
+#'@import jsonlite dplyr ggvis
 process_cal_human <- function(data, params, ...) {
   ## some notes on syntax with this function.
   ## some of these intermediate functions might return things of interest?
