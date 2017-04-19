@@ -1,4 +1,5 @@
 ## this is our entry point from opencpu
+#'@export
 process_cal_infusion <- function(data, params, ...) {
 
     if(missing(params)) {
