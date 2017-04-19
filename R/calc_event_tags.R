@@ -139,11 +139,11 @@ calc_event_tags <- function(data, params, ...) {
     if (!length(lengths) == 0)
     {
       # define limits for outliers as percent of fullscale
-      mfcdata <- eval(parse(text = paste("data$calrq$MFCFlow_",i,sep = "")))
+      mfcdata <- as.numeric(eval(parse(text = paste("data$calrq$MFCFlow_",i,sep = ""))))
       # Could use this if we don't use all of the mfcdata
       # mfcdata <- mfcdata[breaks[1]:breaks[length(breaks)]]
       
-      limit <- as.numeric(max(mfcdata[!is.na(mfcdata)]))*cutoffpercent
+      limit <- max(mfcdata[!is.na(mfcdata)])*cutoffpercent
       limit <- max(c(limit,zero_limit))
       
       # Cycle through breaks
