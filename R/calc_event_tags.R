@@ -143,7 +143,7 @@ calc_event_tags <- function(data, params, ...) {
       # Could use this if we don't use all of the mfcdata
       # mfcdata <- mfcdata[breaks[1]:breaks[length(breaks)]]
       
-      limit <- max(mfcdata[!is.na(mfcdata)])*cutoffpercent
+      limit <- as.numeric(max(mfcdata[!is.na(mfcdata)]))*cutoffpercent
       limit <- max(c(limit,zero_limit))
       
       # Cycle through breaks
