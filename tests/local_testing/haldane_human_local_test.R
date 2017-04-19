@@ -12,11 +12,11 @@ remove(params)
 options(pilr_server_default = "http://qa.pilrhealth.com")
 options(pilr_project_default = "calorimetertest_9-25-16")
 options(pilr_default_access_code = "92f1762b-f495-4066-852c-e56771a29018")
-participant = c("Eric","Erica")
+participant = "Eric"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema = "1", 
-                               query_params = list(participant = Eric)))
+                               query_params = list(participant = participant)))
 
 # Set your params (participant variables and instrument settings)
 params = list(settings = read_pilr_params(data_set = "pilrhealth:calrq:calrq_data", schema = "1", instrument = "calrq", participant = participant, period = "active_period"))

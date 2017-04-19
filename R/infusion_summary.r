@@ -1,4 +1,5 @@
 ## this is our entry point from opencpu
+#'@export
 process_cal_infusion <- function(data, params, ...) {
 
     if(missing(params)) {
@@ -57,7 +58,7 @@ process_cal_infusion <- function(data, params, ...) {
     ret$haldane$Processed <- strftime(tm , "%Y-%m-%dT%H:%M:%S%z")
 
     ## try only saving cols we need
-    keep <- c("Time", "Processed", "haldane", "recalc_vo2", "recalc_vco2",
+    keep <- c("Time", "Processed", "recalc_vo2", "recalc_vco2",
               "recalc_ee", "recalc_rq", "nulled_outflow_o2",
               "nulled_outflow_co2", "nulled_inflow_o2",
               "nulled_inflow_co2", "do2", "dco2", "inflow_rate",
@@ -121,6 +122,22 @@ infusion_summary <- function(data, params, ...) {
 compute_infusion_summary <- function(data, tag_label, settings, ...) {
     vo2_exp <- 3.941
     vco2_exp <- 1.104
+    
+    # Create array of mean MFC values
+    mfcarray <- c(mean(data$calrq$MFCFlow_1),
+                  mean(data$calrq$MFCFlow_2),
+                  mean(data$calrq$MFCFlow_3),
+                  mean(data$calrq$MFCFlow_4))
+    
+    # If CO2 MFC is not set, set to second largest flow
+    if (!length(settings$CO2_MFC$value)){
+      settings$CO2_MFC$value <- paste('MFC',order(mfcarray,decreasing=T)[2])
+    }
+    
+    # If N2 MFC is not set, set to largest flow
+    if (!length(settings$N2_MFC$value)){
+      settings$N2_MFC$value <- paste('MFC',order(mfcarray,decreasing=T)[1])
+    }
     
     mfc <- get_mfc_data(data, pilr.utils.r::get_setting("CO2_MFC", settings) %>%
                         as.character,

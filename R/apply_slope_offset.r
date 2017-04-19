@@ -1,3 +1,4 @@
+#'@export
 apply_slope_offset <- function(data, params, ...) {
     ## apply algorithm from spreadsheet
     sloped <- data$nulled

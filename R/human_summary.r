@@ -1,5 +1,6 @@
 
 ## this is our entry point from opencpu
+#'@export
 process_cal_human <- function(data, params, ...) {
   ## some notes on syntax with this function.
   ## some of these intermediate functions might return things of interest?
@@ -93,7 +94,7 @@ process_cal_human <- function(data, params, ...) {
   ret$haldane$Processed <- strftime(tm , "%Y-%m-%dT%H:%M:%S%z")
   
   ## try only saving cols we need
-  keep <- c("Time", "Processed", "haldane", "recalc_vo2", "recalc_vco2",
+  keep <- c("Time", "Processed", "recalc_vo2", "recalc_vco2",
             "recalc_ee", "recalc_rq", "nulled_outflow_o2",
             "nulled_outflow_co2", "nulled_inflow_o2",
             "nulled_inflow_co2", "do2", "dco2", "inflow_rate",

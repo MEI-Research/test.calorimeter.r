@@ -1,3 +1,4 @@
+#'@export
 apply_null_offset <- function(data, params, ...)
 {
     calrq <- data$calrq
