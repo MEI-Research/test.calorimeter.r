@@ -9,7 +9,7 @@ library(base64enc)
 options(pilr_server_default = "http://qa.pilrhealth.com")
 options(pilr_project_default = "infusiontest-4-1-17")
 options(pilr_default_access_code = "e3c682d7-2689-40ac-82e2-a0e29b4793ff")
-participant = "infusion"
+participant = "equationtest"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <-
@@ -56,7 +56,7 @@ for (i in 1:length(multiple_n2$fields))
   )
   print(i)
 }
-end
+# end
 
 json_frame = data.frame(matrix(1, 2))
 json_frame$fields = fields
@@ -83,7 +83,7 @@ data$event_tags <-
 data$event_tags <- data$event_tags$calrq
 
 # Calculate event tags
-data$event_tags2 <- calc_event_tags(data, params)
+# data$event_tags2 <- calc_event_tags(data, params)
 
 # Run human summary
 ret <- process_cal_infusion(data, params)

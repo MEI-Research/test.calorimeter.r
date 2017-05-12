@@ -194,9 +194,9 @@ calc_push <- function(data, volume, cal_seconds, n2_df) {
   data$haldane_outflow <- ( data$InflowRate * (data$nulled_inflow_n2/100) - (data$dn2/100) * volume ) / (data$nulled_outflow_n2/100)
   
   ## calc VO2 and VCO2 in ml/min
-  data$recalc_vo2 <- (10/1000) * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2 - data$do2 * volume)
+  data$recalc_vo2 <- 10 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2 - data$do2 * volume)
 
-  data$recalc_vco2 <- (-10/1000) * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2 - data$dco2 * volume)
+  data$recalc_vco2 <- -10 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow * data$nulled_outflow_co2 - data$dco2 * volume)
   
   data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
                         vco2_constant * data$recalc_vco2)) +
@@ -258,16 +258,16 @@ calc_pull <- function(data, volume, cal_seconds, n2_df) {
   data$recalc_vco2 <- -10 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$dco2 * volume)
   
   ## calc VO2 and VCO2 in ml/min
-  
-  data$recalc_vo2 <- (data$OutflowRate * (data$nulled_inflow_o2 * data$haldane -
-                                            data$nulled_outflow_o2) -
-                        volume * data$do2) / 100
-  
-  data$recalc_vco2 <- (data$OutflowRate *
-                         (-1 * data$nulled_inflow_co2 * data$haldane +
-                            data$nulled_outflow_co2) +
-                         volume * data$dco2) / 100
-  
+  # Old version of equations
+  #data$recalc_vo2 <- (data$OutflowRate * (data$nulled_inflow_o2 * data$haldane -
+  #                                          data$nulled_outflow_o2) -
+  #                      volume * data$do2) / 100
+  #
+  #data$recalc_vco2 <- (data$OutflowRate *
+  #                       (-1 * data$nulled_inflow_co2 * data$haldane +
+  #                          data$nulled_outflow_co2) +
+  #                       volume * data$dco2) / 100
+  #
   ## already divided by 1000
   data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
                         vco2_constant * data$recalc_vco2)) +
