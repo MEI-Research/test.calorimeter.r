@@ -20,7 +20,7 @@
             "code":"pilrhealth:calrq:chamber_volume",
             "name":"Chamber Volume",
             "description":"Volume of the calorimeter chamber",
-            "value":30000,
+            "value":31000,
             "min":0,
             "max":99999,
             "required":true
@@ -444,6 +444,12 @@
         },
         {
             "definition_source_rel":"./human-report-file.json"
+        },
+        {
+            "definition_source_rel":"./infusion-report-file.json"
+        },
+        {
+            "definition_source_rel":"./burn-report-file.json"
         }
     ]
 }
