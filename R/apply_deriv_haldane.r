@@ -194,9 +194,9 @@ calc_push <- function(data, volume, cal_seconds, n2_df) {
   data$haldane_outflow <- ( data$InflowRate * (data$nulled_inflow_n2/100) - (data$dn2/100) * volume ) / (data$nulled_outflow_n2/100)
   
   ## calc VO2 and VCO2 in ml/min
-  data$recalc_vo2 <- 10 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2 - data$do2 * volume)
+  data$recalc_vo2 <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2 - data$do2 * volume)
 
-  data$recalc_vco2 <- -10 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow * data$nulled_outflow_co2 - data$dco2 * volume)
+  data$recalc_vco2 <- -10/1000 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow * data$nulled_outflow_co2 - data$dco2 * volume)
   
   data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
                         vco2_constant * data$recalc_vco2)) +
@@ -208,9 +208,9 @@ calc_push <- function(data, volume, cal_seconds, n2_df) {
   ## they are the same calculations for recalc_vo2 and recalc_vco2,
   ## except for the term involving volume
   
-  data$recalc_vo2_0vol <- 10 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2)
+  data$recalc_vo2_0vol <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2)
   
-  data$recalc_vco2_0vol <- -10 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2)
+  data$recalc_vco2_0vol <- -10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2)
   
   data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
                              vco2_constant * data$recalc_vco2_0vol)) +
@@ -253,9 +253,9 @@ calc_pull <- function(data, volume, cal_seconds, n2_df) {
   }  
   data$haldane_inflow <- ( data$OutflowRate * (data$nulled_outflow_n2/100) + (data$dn2/100) * volume ) / (data$nulled_inflow_n2/100)
   
-  data$recalc_vo2 <- 10 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$do2 * volume)
+  data$recalc_vo2 <- 10/1000 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$do2 * volume)
   
-  data$recalc_vco2 <- -10 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$dco2 * volume)
+  data$recalc_vco2 <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$dco2 * volume)
   
   ## calc VO2 and VCO2 in ml/min
   # Old version of equations
