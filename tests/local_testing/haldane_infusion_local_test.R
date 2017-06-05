@@ -7,9 +7,12 @@ library(base64enc)
 
 # Set options for server, project, access code
 options(pilr_server_default = "http://qa.pilrhealth.com")
-options(pilr_project_default = "infusiontest-4-1-17")
-options(pilr_default_access_code = "e3c682d7-2689-40ac-82e2-a0e29b4793ff")
-participant = "equationtest"
+options(pilr_project_default = "testproject9")
+options(pilr_default_access_code = "f1702828-1f8c-4dd7-bca4-ee93806787c6")
+participant = "Test"
+# options(pilr_project_default = "infusiontest-4-1-17")
+# options(pilr_default_access_code = "e3c682d7-2689-40ac-82e2-a0e29b4793ff")
+# participant = "equationtest"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <-
@@ -67,6 +70,8 @@ params$settings$multiple_n2$value <- toJSON(json_frame)
 params$settings$volume <- params$settings$chamber_volume
 params$settings$CO2_MFC <- params$settings$co2_mfc
 params$settings$N2_MFC <- params$settings$n2_mfc
+
+pilr.utils.r::get_setting("CO2_MFC", params$settings)
 
 # Run haldane transform
 data$haldane <- apply_haldane(data, params)

@@ -113,6 +113,8 @@ human_summary <- function(data, params, ...) {
   calrq <- data$haldane
   calrq <- calrq[order(calrq$Time) , ]
   
+  calrq <- data$haldane$datasets$haldane
+  
   ## obtain input objects
   settings <- params$settings
   

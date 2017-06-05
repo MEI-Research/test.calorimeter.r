@@ -10,9 +10,9 @@ remove(params)
 
 # Set options for server, project, access code
 options(pilr_server_default = "http://qa.pilrhealth.com")
-options(pilr_project_default = "calorimetertest_9-25-16")
-options(pilr_default_access_code = "92f1762b-f495-4066-852c-e56771a29018")
-participant = "Eric"
+options(pilr_project_default = "metabolism_pilot_2")
+options(pilr_default_access_code = "bf59deeb-2b59-4b65-986d-6bce2ed61872")
+participant = "Test"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema = "1", 

@@ -100,7 +100,7 @@ deriv_haldane <- function(data, params, ...) {
   ##    stop(paste(capture.output(summary(haldane)), collapse = "\n"))
   
   ## Create data frame of N2 values and date_time
-  if ("multiple_n2" %in% names(params$settings)) {
+  if (pilr.utils.r::has_setting("multiple_n2", params$settings)) {
     
     ## Interpret N2 array variable JSON
     from_json <- fromJSON(params$settings$multiple_n2$value[[1]])
@@ -125,10 +125,15 @@ deriv_haldane <- function(data, params, ...) {
       }
     }
   }
-  else {
+  else if (pilr.utils.r::has_setting("urine_nitrogen", params$settings)){
+    n2_val <- pilr.utils.r::get_setting("urine_nitrogen", params$settings)
+    n2_df <- data.frame(datetime = as.POSIXct("2012-01-01 01:00:00", format="%Y-%m-%d %H:%M:%S"),
+                        value = n2_val)
+  } else {
     n2_df <- data.frame(datetime = as.POSIXct("2012-01-01 01:00:00", format="%Y-%m-%d %H:%M:%S"),
                         value = 0)
   }
+    
   
   if(grepl("push", config, ignore.case = TRUE)) {
     message("using config: push")
@@ -207,10 +212,11 @@ calc_push <- function(data, volume, cal_seconds, n2_df) {
   ## add these in so they are available for short circuit infusions
   ## they are the same calculations for recalc_vo2 and recalc_vco2,
   ## except for the term involving volume
+  data$haldane_outflow_0vol <- ( data$InflowRate * (data$nulled_inflow_n2/100) ) / (data$nulled_outflow_n2/100)
   
-  data$recalc_vo2_0vol <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2)
+  data$recalc_vo2_0vol <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow_0vol * data$nulled_outflow_o2)
   
-  data$recalc_vco2_0vol <- -10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2)
+  data$recalc_vco2_0vol <- -10/1000 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow_0vol * data$nulled_outflow_co2)
   
   data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
                              vco2_constant * data$recalc_vco2_0vol)) +

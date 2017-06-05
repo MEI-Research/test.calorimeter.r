@@ -13,6 +13,8 @@ process_cal_infusion <- function(data, params, ...) {
     if(!length(data$event_tags)) {
         stop("No event tags dataset was received.")
     }
+  
+    
     
     ret <- data %>% apply_null_offset(params) %>%
         apply_slope_offset(params) %>%
@@ -123,6 +125,10 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
     vo2_exp <- 3.941
     vco2_exp <- 1.104
     
+    vo2_constant <- 3.941
+    vco2_constant <- 1.104
+    nitrogen_constant <- -2.17
+    
     # Create array of mean MFC values
     mfcarray <- c(mean(as.numeric(data$calrq$MFCFlow_1)),
                   mean(as.numeric(data$calrq$MFCFlow_2)),
@@ -143,9 +149,137 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
                         as.character,
                         pilr.utils.r::get_setting("N2_MFC", settings) %>%
                         as.character)
-  
-    VO2_exp <- mean( data$nulled_inflow_o2 * (mfc$CO2 + mfc$N2)) / 100
-    VCO2_exp <- mean(mfc$CO2)
+
+    config <- pilr.utils.r::get_setting("configuration",
+                                        settings) 
+    cal_volume <- pilr.utils.r::get_setting("volume",
+                                            settings)
+    
+    if (pilr.utils.r::has_setting("expected",
+                              settings)){
+      expected <- pilr.utils.r::get_setting("expected",
+                                          settings)  
+    } else {
+      config <- "Push - Convert to Pull"
+    }
+    
+    # Determine form of equations/expected and execute
+    if(grepl("Push - Corrected Derivative", expected, ignore.case = TRUE)) {
+      if(grepl("push", config, ignore.case = TRUE)) {
+        message("using config: push, using expected: corrected derivative")
+        
+        # Push Method
+        VO2_exp <- mean((data$InflowRate * data$nulled_inflow_o2 * mfc$N2)/(mfc$N2 * 100 + data$InflowRate * data$nulled_inflow_N2)) / 100
+        VCO2_exp <- mean((data$InflowRate * (data$nulled_inflow_CO2 * mfc$N2 - mfc$CO2 * data$nulled_inflow_N2)) / (-mfc$N2 * 100 - data$InflowRate * data$nulled_inflow_N2)) / 100
+        
+        # Derivative correction
+        d_corr = (data$InflowRate - VO2_exp + VCO2_exp) / (data$InflowRate + mfc$N2 + mfc$CO2)
+        
+        # Recalc VO2 VCO2
+        data$haldane_outflow <- ( data$InflowRate * (data$nulled_inflow_n2/100) - (data$dn2/100) * volume * d_corr) / (data$nulled_outflow_n2/100)
+        data$haldane_outflow_0vol <- ( data$InflowRate * (data$nulled_inflow_n2/100) ) / (data$nulled_outflow_n2/100)
+        
+        data$recalc_vo2 <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2 - data$do2 * volume * d_corr)
+        data$recalc_vco2 <- -10/1000 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow * data$nulled_outflow_co2 - data$dco2 * volume * d_corr)
+        
+        data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
+                              vco2_constant * data$recalc_vco2)) +
+          (nitrogen_constant * data$nitrogen / 1440)
+        
+        data$recalc_rq <- data$recalc_vco2 / data$recalc_vo2
+        
+        # 0 vol eqns
+        data$recalc_vo2_0vol <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow_0vol * data$nulled_outflow_o2)
+        data$recalc_vco2_0vol <- -10/1000 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow_0vol * data$nulled_outflow_co2)
+        
+        data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
+                                   vco2_constant * data$recalc_vco2_0vol)) +
+          (nitrogen_constant * data$nitrogen / 1440)
+        
+        data$recalc_rq_0vol <- data$recalc_vco2_0vol / data$recalc_vo2_0vol
+      
+      } else {
+        stop("wrong expected equations for pull calorimeter")
+      }
+    } else if(grepl("Push - Convert to Pull", expected, ignore.case = TRUE)) {
+      if(grepl("push", config, ignore.case = TRUE)) {
+        message("using config: push, using expected: converted to pull")
+        
+        # Calculate 'Outflow Rate'
+        OutflowRate = data$InflowRate + mfc$N2 + mfc$CO2
+        
+        # Pull Method
+        VO2_exp <- mean((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_N2) / 100
+        VCO2_exp <- mean((mfc$CO2 * data$nulled_inflow_N2 - mfc$N2 * data$nulled_inflow_CO2) / data$nulled_inflow_N2) / 100
+        
+        # Recalc VO2 VCO2
+        data$haldane_inflow <- ( OutflowRate * (data$nulled_outflow_n2/100) - (data$dn2/100) * volume) / (data$nulled_inflow_n2/100)
+        data$haldane_inflow_0vol <- ( OutflowRate * (data$nulled_outflow_n2/100) ) / (data$nulled_inflow_n2/100)
+        
+        data$recalc_vo2 <- 10/1000 * (data$haldane_inflow * data$nulled_inflow_o2 - OutflowRate * data$nulled_outflow_o2 - data$do2 * volume)
+        data$recalc_vco2 <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_co2 - OutflowRate * data$nulled_outflow_co2 - data$dco2 * volume)
+        
+        data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
+                              vco2_constant * data$recalc_vco2)) +
+          (nitrogen_constant * data$nitrogen / 1440)
+        
+        data$recalc_rq <- data$recalc_vco2 / data$recalc_vo2
+        
+        # 0 vol eqns
+        data$recalc_vo2_0vol <- 10/1000 *(data$haldane_inflow * data$nulled_inflow_o2 - OutflowRate * data$nulled_outflow_o2)
+        data$recalc_vco2_0vol <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_co2 - OutflowRate * data$nulled_outflow_co2)
+        
+        data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
+                                   vco2_constant * data$recalc_vco2_0vol)) +
+          (nitrogen_constant * data$nitrogen / 1440)
+        
+        data$recalc_rq_0vol <- data$recalc_vco2_0vol / data$recalc_vo2_0vol
+        
+      } else {
+        stop("wrong expected equations for pull calorimeter")
+      }
+    } else if(grepl("Pull - Normal", expected, ignore.case = TRUE)) {
+      if(grepl("pull", config, ignore.case = TRUE)) {
+        message("using config: pull, using expected: pull normal")
+        
+        # Pull Method
+        VO2_exp <- mean((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_N2) / 100
+        VCO2_exp <- mean((mfc$CO2 * data$nulled_inflow_N2 - mfc$N2 * data$nulled_inflow_CO2) / data$nulled_inflow_N2) / 100
+        
+        # Recalc VO2 VCO2
+        data$haldane_inflow <- ( data$OutflowRate * (data$nulled_outflow_n2/100) - (data$dn2/100) * volume) / (data$nulled_inflow_n2/100)
+        data$haldane_inflow_0vol <- ( data$OutflowRate * (data$nulled_outflow_n2/100) ) / (data$nulled_inflow_n2/100)
+        
+        data$recalc_vo2 <- 10/1000 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$do2 * volume)
+        data$recalc_vco2 <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_co2 - data$OutflowRate * data$nulled_outflow_co2 - data$dco2 * volume)
+        
+        data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
+                              vco2_constant * data$recalc_vco2)) +
+          (nitrogen_constant * data$nitrogen / 1440)
+        
+        data$recalc_rq <- data$recalc_vco2 / data$recalc_vo2
+        
+        # 0 vol eqns
+        data$recalc_vo2_0vol <- 10/1000 *(data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2)
+        data$recalc_vco2_0vol <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_co2 - data$OutflowRate * data$nulled_outflow_co2)
+        
+        data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
+                                   vco2_constant * data$recalc_vco2_0vol)) +
+          (nitrogen_constant * data$nitrogen / 1440)
+        
+        data$recalc_rq_0vol <- data$recalc_vco2_0vol / data$recalc_vo2_0vol
+        
+      } else {
+        stop("wrong expected equations for push calorimeter")
+      }
+    } else {
+      message("using approximate equations, please update settings")
+      # Use old eqns
+      # Expected values
+      VO2_exp <- mean( data$nulled_inflow_o2 * (mfc$CO2 + mfc$N2)) / 100
+      VCO2_exp <- mean(mfc$CO2)
+    }
+    
     EE_exp <- (vo2_exp * VO2_exp + vco2_exp * VCO2_exp)
     RQ_exp <- VCO2_exp / VO2_exp
 
