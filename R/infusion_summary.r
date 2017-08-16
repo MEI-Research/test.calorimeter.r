@@ -13,8 +13,6 @@ process_cal_infusion <- function(data, params, ...) {
     if(!length(data$event_tags)) {
         stop("No event tags dataset was received.")
     }
-  
-    
     
     ret <- data %>% apply_null_offset(params) %>%
         apply_slope_offset(params) %>%
@@ -151,7 +149,7 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
                         as.character)
 
     config <- pilr.utils.r::get_setting("configuration",
-                                        settings) 
+                                        settings)
     cal_volume <- pilr.utils.r::get_setting("volume",
                                             settings)
     
@@ -159,8 +157,12 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
                               settings)){
       expected <- pilr.utils.r::get_setting("expected",
                                           settings)  
+    } else if (config == 'Push - Absolute' | config == 'Push - Differential') {
+      expected <- "Push - Convert to Pull"
+      message("No equation configuration found - using Push -> Pull conversion method")
     } else {
-      config <- "Push - Convert to Pull"
+      expected <- "Pull - Normal"
+      message("No equation configuration found - using Pull method")
     }
     
     # Determine form of equations/expected and execute

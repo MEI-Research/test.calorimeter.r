@@ -385,6 +385,8 @@ compute_human_summary <- function(data, tag_label, settings,
     ret$spa <- 0
   }
   
+  
+  
   ret$tag_label <- gsub("TT_", "", tag_label)
   as.data.frame(ret)
 }

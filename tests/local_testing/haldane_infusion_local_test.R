@@ -7,9 +7,9 @@ library(base64enc)
 
 # Set options for server, project, access code
 options(pilr_server_default = "http://qa.pilrhealth.com")
-options(pilr_project_default = "testproject9")
-options(pilr_default_access_code = "f1702828-1f8c-4dd7-bca4-ee93806787c6")
-participant = "Test"
+options(pilr_project_default = "equation_test_6-5-17")
+options(pilr_default_access_code = "52a5d010-61d1-44bc-94fa-40eba6230afe")
+participant = "Infusion2"
 # options(pilr_project_default = "infusiontest-4-1-17")
 # options(pilr_default_access_code = "e3c682d7-2689-40ac-82e2-a0e29b4793ff")
 # participant = "equationtest"
