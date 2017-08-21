@@ -1,5 +1,9 @@
 ## this is our entry point from opencpu
 #'@export
+#'
+# calrq <- calrq$datasets$haldane 
+# data <- data$calrq
+
 process_cal_infusion <- function(data, params, ...) {
 
     if(missing(params)) {
@@ -88,8 +92,6 @@ infusion_summary <- function(data, params, ...) {
     event_tags$end_time <- ifelse(nchar(event_tags$end_time) == 24,
                                     paste0(substr(event_tags$end_time, 1, 19), "Z") ,
                                     event_tags$end_time)
-
-
     
     event_tags <- event_tags[order(event_tags$start_time), ]
     tag_table <- pilr.utils.r::apply_event_tags(calrq$Time, event_tags)
@@ -128,10 +130,10 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
     nitrogen_constant <- -2.17
     
     # Create array of mean MFC values
-    mfcarray <- c(mean(as.numeric(data$calrq$MFCFlow_1)),
-                  mean(as.numeric(data$calrq$MFCFlow_2)),
-                  mean(as.numeric(data$calrq$MFCFlow_3)),
-                  mean(as.numeric(data$calrq$MFCFlow_4)))
+    mfcarray <- c(mean(as.numeric(data$MFCFlow_1)),
+                  mean(as.numeric(data$MFCFlow_2)),
+                  mean(as.numeric(data$MFCFlow_3)),
+                  mean(as.numeric(data$MFCFlow_4)))
     
     # If CO2 MFC is not set, set to second largest flow
     if (!length(settings$CO2_MFC$value)){
@@ -150,7 +152,7 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
 
     config <- pilr.utils.r::get_setting("configuration",
                                         settings)
-    cal_volume <- pilr.utils.r::get_setting("volume",
+    volume <- pilr.utils.r::get_setting("volume",
                                             settings)
     
     if (pilr.utils.r::has_setting("expected",
@@ -164,6 +166,8 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
       expected <- "Pull - Normal"
       message("No equation configuration found - using Pull method")
     }
+    #
+   
     
     # Determine form of equations/expected and execute
     if(grepl("Push - Corrected Derivative", expected, ignore.case = TRUE)) {
@@ -171,8 +175,8 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
         message("using config: push, using expected: corrected derivative")
         
         # Push Method
-        VO2_exp <- mean((data$InflowRate * data$nulled_inflow_o2 * mfc$N2)/(mfc$N2 * 100 + data$InflowRate * data$nulled_inflow_N2)) / 100
-        VCO2_exp <- mean((data$InflowRate * (data$nulled_inflow_CO2 * mfc$N2 - mfc$CO2 * data$nulled_inflow_N2)) / (-mfc$N2 * 100 - data$InflowRate * data$nulled_inflow_N2)) / 100
+        VO2_exp <- mean((data$InflowRate * data$nulled_inflow_o2 * mfc$N2)/(mfc$N2 * 100 + data$InflowRate * data$nulled_inflow_n2)) / 100
+        VCO2_exp <- mean((data$InflowRate * (data$nulled_inflow_co2 * mfc$N2 - mfc$CO2 * data$nulled_inflow_n2)) / (-mfc$N2 * 100 - data$InflowRate * data$nulled_inflow_n2)) / 100
         
         # Derivative correction
         d_corr = (data$InflowRate - VO2_exp + VCO2_exp) / (data$InflowRate + mfc$N2 + mfc$CO2)
@@ -211,8 +215,8 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
         OutflowRate = data$InflowRate + mfc$N2 + mfc$CO2
         
         # Pull Method
-        VO2_exp <- mean((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_N2) / 100
-        VCO2_exp <- mean((mfc$CO2 * data$nulled_inflow_N2 - mfc$N2 * data$nulled_inflow_CO2) / data$nulled_inflow_N2) / 100
+        VO2_exp <- mean((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_n2) / 100
+        VCO2_exp <- mean((mfc$CO2 * data$nulled_inflow_n2 - mfc$N2 * data$nulled_inflow_co2) / data$nulled_inflow_n2) / 100
         
         # Recalc VO2 VCO2
         data$haldane_inflow <- ( OutflowRate * (data$nulled_outflow_n2/100) - (data$dn2/100) * volume) / (data$nulled_inflow_n2/100)
@@ -245,8 +249,8 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
         message("using config: pull, using expected: pull normal")
         
         # Pull Method
-        VO2_exp <- mean((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_N2) / 100
-        VCO2_exp <- mean((mfc$CO2 * data$nulled_inflow_N2 - mfc$N2 * data$nulled_inflow_CO2) / data$nulled_inflow_N2) / 100
+        VO2_exp <- mean((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_n2) / 100
+        VCO2_exp <- mean((mfc$CO2 * data$nulled_inflow_n2 - mfc$N2 * data$nulled_inflow_co2) / data$nulled_inflow_n2) / 100
         
         # Recalc VO2 VCO2
         data$haldane_inflow <- ( data$OutflowRate * (data$nulled_outflow_n2/100) - (data$dn2/100) * volume) / (data$nulled_inflow_n2/100)

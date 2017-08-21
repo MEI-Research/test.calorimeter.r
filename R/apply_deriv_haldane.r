@@ -23,14 +23,20 @@ apply_haldane <- function(data, params, ...) {
   
   ## try only saving cols we need
   keep <- c("Time", "Processed", "haldane", "recalc_vo2", "recalc_vco2",
+            "recalc_vo2_0vol","recalc_vco2_0vol",
+            "haldane_outflow_0vol","haldane_inflow_0vol",
+            "OutflowRate","InflowRate",
+            "haldane_outflow","haldane_inflow",
             "recalc_ee", "recalc_rq", "nulled_outflow_o2",
+            "nulled_inflow_n2","nulled_outflow_n2",
             "nulled_outflow_co2", "nulled_inflow_o2",
-            "nulled_inflow_co2", "do2", "dco2", "inflow_rate",
+            "nulled_inflow_co2", "do2", "dco2","dn2", "inflow_rate",
+            "MFCFlow_1","MFCFlow_2","MFCFlow_3","MFCFlow_4","MFCFlow_5",
             "outflow_rate", "id", "pt", "timestamp", "nitrogen",
             "np_rq", "protein_ox", "cho_ox", "fat_ox", "Activity", "Activity_Rate")
   
   # Save output datasets and files in list
-  ret <- list(datasets = list(haldane = haldane$haldane[keep %in% colnames(haldane$haldane)]),
+  ret <- list(datasets = list(haldane = haldane$haldane[colnames(haldane$haldane) %in% keep]),
               files = list())
   
   ret
