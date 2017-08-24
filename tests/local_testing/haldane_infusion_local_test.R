@@ -9,10 +9,8 @@ library(base64enc)
 options(pilr_server_default = "http://qa.pilrhealth.com")
 options(pilr_project_default = "equation_test_6-5-17")
 options(pilr_default_access_code = "52a5d010-61d1-44bc-94fa-40eba6230afe")
-participant = "Infusion2"
-# options(pilr_project_default = "infusiontest-4-1-17")
-# options(pilr_default_access_code = "e3c682d7-2689-40ac-82e2-a0e29b4793ff")
-# participant = "equationtest"
+participant = "Infusion3"
+# participant = "Infusion"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <-
