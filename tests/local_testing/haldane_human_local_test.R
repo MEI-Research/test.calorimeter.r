@@ -10,9 +10,9 @@ remove(params)
 
 # Set options for server, project, access code
 options(pilr_server_default = "http://qa.pilrhealth.com")
-options(pilr_project_default = "metabolism_pilot_2")
-options(pilr_default_access_code = "bf59deeb-2b59-4b65-986d-6bce2ed61872")
-participant = "Test"
+options(pilr_project_default = "equation_test_6-5-17")
+options(pilr_default_access_code = "52a5d010-61d1-44bc-94fa-40eba6230afe")
+participant = "Human"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema = "1", 
@@ -22,7 +22,7 @@ data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema 
 params = list(settings = read_pilr_params(data_set = "pilrhealth:calrq:calrq_data", schema = "1", instrument = "calrq", participant = participant, period = "active_period"))
 
 # Add package information to params
-params$package <- "mei.calorimeter.r"
+params$package <- "test.calorimeter.r"
 
 # Fix multiple N2 array
 testlist <- eval(parse("", n=NULL, gsub('\n', "", params$settings$multiple_n2$value, fixed = TRUE)))

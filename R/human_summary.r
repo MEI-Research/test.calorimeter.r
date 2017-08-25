@@ -111,9 +111,9 @@ process_cal_human <- function(data, params, ...) {
 
 human_summary <- function(data, params, ...) {
   calrq <- data$haldane
-  calrq <- calrq[order(calrq$Time) , ]
+  # calrq <- calrq[order(calrq$Time) , ]
   
-  calrq <- data$haldane$datasets$haldane
+ # calrq <- data$haldane$datasets$haldane
   
   ## obtain input objects
   settings <- params$settings
@@ -235,9 +235,15 @@ human_summary <- function(data, params, ...) {
       rmr_data <- pilr.utils.r::subset_event_tags("HumanStudy", calrq, tag_table)
     }
     
-    sampling_seconds <- pilr.utils.r::get_setting("read_interval",
+     sampling_seconds <- pilr.utils.r::get_setting("read_interval",
                                                   params$settings) %>%
       pilr.utils.r::safe_numeric()
+    
+     # Fix when no activity column present
+     act_test <- rmr_data$Activity
+     if(is.null(act_test)){
+       rmr_data$Activity <- 0
+     }
     
     fm1 <- calculate_rmr(rmr_data, sampling_seconds)
     ei_meas <- pilr.utils.r::get_setting("energy_intake_measured", settings,
@@ -296,9 +302,13 @@ compute_human_summary <- function(data, tag_label, settings,
       data <- subset(data, Activity <= pilr.utils.r::get_setting("sleep_threshold", settings))
   }
   
-  sampling_seconds <- pilr.utils.r::get_setting("read_interval",
-                                                settings) %>%
-    pilr.utils.r::safe_numeric()
+  sampling_seconds <- median(diff(as.POSIXlt(data$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
+  units(sampling_seconds) <- "secs"
+  sampling_seconds <- as.numeric(sampling_seconds)
+  
+  #sampling_seconds <- pilr.utils.r::get_setting("read_interval",
+  #                                              settings) %>%
+  #  pilr.utils.r::safe_numeric()
   
   ## (DELETE)obtain all settings we'll need for further computations
   #nitrogen <- pilr.utils.r::get_setting("nitrogen", settings,

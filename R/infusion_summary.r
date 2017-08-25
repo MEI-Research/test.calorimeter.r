@@ -136,13 +136,17 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
                   mean(as.numeric(data$MFCFlow_4)))
     
     # If CO2 MFC is not set, set to second largest flow
-    if (!length(settings$CO2_MFC$value)){
-      settings$CO2_MFC$value <- paste('MFC',order(mfcarray,decreasing=T)[2])
+    if (as.character(pilr.utils.r::get_setting("CO2_MFC",settings)) == "list()"){
+      # settings$CO2_MFC$value <- paste('MFC',order(mfcarray,decreasing=T)[2])
+      # message("Auto-detected CO2 MFC")
+      stop("CO2 MFC not set: check participant settings")
     }
     
     # If N2 MFC is not set, set to largest flow
-    if (!length(settings$N2_MFC$value)){
-      settings$N2_MFC$value <- paste('MFC',order(mfcarray,decreasing=T)[1])
+    if (as.character(pilr.utils.r::get_setting("N2_MFC",settings)) == "list()"){
+      # settings$N2_MFC$value <- paste('MFC',order(mfcarray,decreasing=T)[1])
+      # message("Auto-detected N2 MFC")
+      stop("N2 MFC not set: check participant settings")
     }
     
     mfc <- get_mfc_data(data, pilr.utils.r::get_setting("CO2_MFC", settings) %>%
