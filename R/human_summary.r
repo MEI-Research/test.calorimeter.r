@@ -296,7 +296,7 @@ human_summary <- function(data, params, ...) {
 }
 
 compute_human_summary <- function(data, tag_label, settings,
-                                  do_tf_correct = TRUE) {
+                                  do_tf_correct = FALSE) {
   
   if(tag_label == "TT_SleepNoActivity") {
       data <- subset(data, Activity <= pilr.utils.r::get_setting("sleep_threshold", settings))
@@ -362,10 +362,10 @@ compute_human_summary <- function(data, tag_label, settings,
   ret$vco2 <- sum(data$recalc_vco2, na.rm = TRUE) * tf_correct
   
   ## sums without 24-hour correction factor
-  ret$ee_no_tf_correct <- sum(data$adj_ee, na.rm = TRUE) 
-  ret$ee_nn_no_tf_correct <- sum(data$adj_ee_nn, na.rm = TRUE) 
-  ret$vo2_no_tf_correct <- sum(data$recalc_vo2, na.rm = TRUE)  
-  ret$vco2_no_tf_correct <- sum(data$recalc_vco2, na.rm = TRUE)
+  ret$ee_no_tf_correct <- mean(data$adj_ee, na.rm = TRUE) 
+  ret$ee_nn_no_tf_correct <- mean(data$adj_ee_nn, na.rm = TRUE) 
+  ret$vo2_no_tf_correct <- mean(data$recalc_vo2, na.rm = TRUE)  
+  ret$vco2_no_tf_correct <- mean(data$recalc_vco2, na.rm = TRUE)
   
   ## should this be the 24-hour corrected version?
   ret$eb_measured <- ei_meas - ret$ee
