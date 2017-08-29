@@ -1,3 +1,5 @@
+## this is our entry point from opencpu
+#'@export
 process_cal_burn <- function(data, params, ...) {
 
     if(missing(params)) {

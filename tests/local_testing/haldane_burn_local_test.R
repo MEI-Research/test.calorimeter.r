@@ -18,7 +18,7 @@ data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema 
 # Set your params (participant variables and instrument settings)
 params = list(settings = read_pilr_params(data_set = "pilrhealth:calrq:calrq_data", schema = "1", 
                                           instrument = "calrq", participant = participant, period = "active_period"))
-params$package <- "mei.calorimeter.r"
+params$package <- "test.calorimeter.r"
 
 # Fix N2 array
 multiple_n2 <- eval(parse("", n=NULL, gsub('\n', "", params$settings$multiple_n2$value, fixed = TRUE)))

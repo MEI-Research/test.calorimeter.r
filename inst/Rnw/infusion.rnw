@@ -52,6 +52,7 @@ Report Generated At: \verb|\Sexpr{now}| & \\
 
 \section*{Study Information}
 
+
 <<infusion_table, results="asis", echo = FALSE, warnings = FALSE, message = FALSE>>=
 
 infusion_names <- c("tag_label", "start_time", "end_time", "vo2_exp", "vo2_meas", 
@@ -67,15 +68,18 @@ inf_table$tag_label <- as.character(inf_table$tag_label)
 
 inf_table <- adply(inf_table, 1, function(x) {
     data.frame(Tag = c(x$tag_label, "", ""),
-               Measure = c("Exp", "Avg", "Err"),
+               Measure = c("Expected", "Average", "Error"),
                VO2 = c(x$vo2_exp, x$vo2_meas, x$vo2_err),
                VCO2 = c(x$vco2_exp, x$vco2_meas, x$vco2_err),
                MR = c(x$ee_exp, x$ee_meas, x$ee_err),
                RQ = c(x$rq_exp, x$rq_meas, x$rq_err))
 })[c("Tag", "Measure", "VO2", "VCO2", "MR", "RQ")]
 
+addtorow <- list()
+addtorow$pos <- list(0)
+addtorow$command <- c(" & & ml/min & ml/min & cal/min \\\\\n")
 
-print(xtable(inf_table, digits = 4), include.rownames = FALSE)
+print(xtable(inf_table, digits = 2), include.rownames = FALSE, add.to.row = addtorow)
 @ 
 
 \section*{Setup}

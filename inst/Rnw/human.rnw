@@ -111,7 +111,12 @@ library(xtable)
 human_sub <- human[c("tag_label", "vo2", "vco2", "ee", "mr", "rq", "np_rq", "cho_ox", "fat_ox", "protein_ox")]
 human_sub <- subset(human_sub, human_sub$tag_label != "TT_null_period")
 names(human_sub) <- c("Tag Label", "VO2", "VCO2", "EE", "MR", "RQ", "np_rq", "Cho_Ox", "Fat_Ox", "Pro_Ox")
-print(xtable(human_sub), include.rownames=FALSE) 
+
+addtorow <- list()
+addtorow$pos <- list(0)
+addtorow$command <- c(" & l/day & l/day & kcal/day & cal/min & & g & g & g \\\\\n")
+
+print(xtable(human_sub), include.rownames=FALSE, add.to.row = addtorow) 
 @
 
 \begin{tabular}{lll}

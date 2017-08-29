@@ -1,5 +1,4 @@
 ## this is our entry point from pilr on file upload
-
 #'@export
 apply_haldane <- function(data, params, ...) {
   haldane <- apply_null_offset(data, params) %>%
