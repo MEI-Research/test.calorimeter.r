@@ -102,7 +102,7 @@ process_cal_human <- function(data, params, ...) {
             "np_rq", "protein_ox", "cho_ox", "fat_ox")
   
   
-  ## return two datasets
+  ## return two datasetsjsonlite::toJSON(list(data,params))
   datasets <- list(human = human, haldane = ret$haldane[keep %in% colnames(ret$haldane)])
   files    <- list(human = jsonlite::unbox(base64_rep))
   
