@@ -49,7 +49,49 @@ process_cal_human <- function(data, params, ...) {
     apply_slope_offset(params) %>%
     deriv_haldane(params)
   
-  human <- ret %>% human_summary(params)
+  ## Organize each visit into a list
+  visits <- c(tags = c())
+  visitIndex <- which(event_tags$tags %in% "Human Study")
+  for (i in 1:length(visitIndex)) {
+    if (i == length(visitIndex)) {
+      visits[i] <- list(tags = event_tags$tags[visitIndex[i]:length(event_tags$tags)])
+    }
+    else {
+      visits[i] <- list(tags = event_tags$tags[visitIndex[i]:visitIndex[i+1]-1])
+    }
+  }
+  
+  # For each visit
+  for (i in 1:length(visits)) {
+    ret_sub <- c()
+    ret$haldane$timestamp <- as.POSIXct(ret$haldane$timestamp, format = "%Y-%m-%dT%H:%M:%SZ")
+    
+    # Find first and last data within visit
+    if (i == length(visits)) {
+      startTime <- as.POSIXct(event_tags$start_time[visitIndex[i]], format = "%Y-%m-%dT%H:%M:%SZ")
+      endTime <- as.POSIXct(event_tags$end_time[visitIndex[i]], format = "%Y-%m-%dT%H:%M:%SZ")
+    }
+    else {
+      startTime <- as.POSIXct(event_tags$start_time[visitIndex[i]], format = "%Y-%m-%dT%H:%M:%SZ")
+      endTime <- as.POSIXct(event_tags$end_time[visitIndex[i]], format = "%Y-%m-%dT%H:%M:%SZ")
+    }
+    
+    event_tags$start_time_formatted <- as.POSIXct(event_tags$start_time, format = "%Y-%m-%dT%H:%M:%SZ")
+    event_tags$end_time_formatted <- as.POSIXct(event_tags$end_time, format = "%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get data within visit
+    ret_sub$haldane <- subset(ret$haldane, (ret$haldane$timestamp >= startTime & ret$haldane$timestamp <= endTime))
+    ret_sub$event_tags <- subset(event_tags, (event_tags$start_time_formatted >= startTime & event_tags$end_time_formatted <= endTime))
+    
+    # Run human summary and merge each visit result
+    if (i == 1) {
+      human <- ret_sub %>% human_summary(params)
+    }
+    else {
+      human <- rbind(human, ret_sub %>% human_summary(params))
+    }
+  }
+  
   
   ## add metadata to human data.frame for return data, how are we
   ## going to do this in general?
@@ -99,10 +141,10 @@ process_cal_human <- function(data, params, ...) {
             "nulled_outflow_co2", "nulled_inflow_o2",
             "nulled_inflow_co2", "do2", "dco2", "inflow_rate",
             "outflow_rate", "id", "pt", "timestamp", "nitrogen",
-            "np_rq", "protein_ox", "cho_ox", "fat_ox")
+            "np_rq", "protein_ox", "cho_ox", "fat_ox", "haldane")
   
   
-  ## return two datasetsjsonlite::toJSON(list(data,params))
+  ## return two datasets
   datasets <- list(human = human, haldane = ret$haldane[keep %in% colnames(ret$haldane)])
   files    <- list(human = jsonlite::unbox(base64_rep))
   
@@ -111,9 +153,7 @@ process_cal_human <- function(data, params, ...) {
 
 human_summary <- function(data, params, ...) {
   calrq <- data$haldane
-  # calrq <- calrq[order(calrq$Time) , ]
-  
- # calrq <- data$haldane$datasets$haldane
+  calrq <- calrq[order(calrq$Time) , ]
   
   ## obtain input objects
   settings <- params$settings
@@ -206,6 +246,77 @@ human_summary <- function(data, params, ...) {
   ## remove Null tag
   ret <- subset(ret, tag_label != "Null")
   
+  ## Interpret rest duration array variable JSON
+  from_json <- fromJSON(params$settings$rest_durations$value[[1]])
+  
+  ## Create data frame of rest durations
+  rest_df <- data.frame(post_meal = c(), rest = c())
+  for (i in 1:length(from_json)) {
+    temp <- as.data.frame(from_json[i,1])
+    rest_df <- rbind(rest_df, data.frame(post_meal = temp$value[[1]],
+                                         rest = temp$value[[2]]))
+  }
+  
+  ret$tef1 <- NA
+  meal_count <- 1
+  
+  ## get MR for THREE post meals
+  if("Post Meal 1" %in% event_tags$tags & "Rest" %in% event_tags$tags) {
+    
+    
+    ree <- compute_human_summary(pilr.utils.r::subset_event_tags("Rest", calrq, tag_table),
+                                 "Rest", settings, do_tf_correct = FALSE)
+    
+    mr_pre <- ree$mr * rest_df$rest[meal_count]  #18 hours
+    
+    mr_post  <- compute_human_summary(pilr.utils.r::subset_event_tags("PostMeal1", calrq, tag_table),
+                                      "PostMeal1", settings,
+                                      do_tf_correct = FALSE)$mr * rest_df$post_meal[meal_count]  #6 hours
+    
+    ee_pre <- ree$ee            
+    ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    
+    ret$tef1[ret$tag_label == "PostMeal1"] <- ret$tef_measured[1]
+    
+  }
+  if (nrow(rest_df) >= 2) {meal_count <- 2}
+  
+  ## get MR for post
+  if("Post Meal 2" %in% event_tags$tags & "Rest" %in% event_tags$tags) {
+    
+    ree <- compute_human_summary(pilr.utils.r::subset_event_tags("Rest", calrq, tag_table),
+                                 "Rest", settings, do_tf_correct = FALSE)
+    
+    mr_pre <- ree$mr * rest_df$rest[meal_count]  #18 hours
+    
+    mr_post  <- compute_human_summary(pilr.utils.r::subset_event_tags("PostMeal2", calrq, tag_table),
+                                      "PostMeal2", settings,
+                                      do_tf_correct = FALSE)$mr * rest_df$post_meal[meal_count]  #6 hours
+    
+    ee_pre <- ree$ee               
+    ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    ret$tef1[ret$tag_label == "PostMeal2"] <- ret$tef_measured[1]
+    
+  }
+  if (nrow(rest_df) >= 3) {meal_count <- 3}
+  
+  ## get MR for post
+  if("Post Meal 3" %in% event_tags$tags & "Rest" %in% event_tags$tags) {
+    
+    ree <- compute_human_summary(pilr.utils.r::subset_event_tags("Rest", calrq, tag_table),
+                                 "Rest", settings, do_tf_correct = FALSE)
+    
+    mr_pre <- ree$mr * rest_df$rest[meal_count]  #18 hours
+    
+    mr_post  <- compute_human_summary(pilr.utils.r::subset_event_tags("PostMeal3", calrq, tag_table),
+                                      "PostMeal3", settings,
+                                      do_tf_correct = FALSE)$mr * rest_df$post_meal[meal_count]  #6 hours
+    
+    ee_pre <- ree$ee               
+    ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    ret$tef1[ret$tag_label == "PostMeal3"] <- ret$tef_measured[1]
+  }
+  
   ## get MR for post
   if("Post Meal" %in% event_tags$tags & "Rest" %in% event_tags$tags) {
     ree <- compute_human_summary(pilr.utils.r::subset_event_tags("Rest", calrq, tag_table),
@@ -219,60 +330,208 @@ human_summary <- function(data, params, ...) {
     
     ee_pre <- ree$ee               
     ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    ret$tef1 <- ret$tef_measured
+    ## Note: remove tef_measured when instrument dataset def updated
   } else {
     ret$tef_measured <- 0
+    ret$tef1 <- ret$tef_measured
+    ## Note: remove tef_measured when instrument dataset def updated
   }
-  
-  ret$tef1 <- ret$tef_measured
-  ## Note: remove tef_measured when instrument dataset def updated
   
   ## add regression intercept
   ## but only do this if we have enough datapoints (31)
+  ret$tef2 <- NA
+  ret$rmr_intercept <- NA
+  ret$rmr_slope <- NA
+  
   if(nrow(calrq) >= 30) {
-    if (pilr.utils.r::has_timetag("Regression Data", event_tags)) {
-      rmr_data <- pilr.utils.r::subset_event_tags("RegressionData", calrq, tag_table)
-    } else {
+    # Calculate regression/tef2 for entire study
+    if("Human Study" %in% event_tags$tags) {
+      
       rmr_data <- pilr.utils.r::subset_event_tags("HumanStudy", calrq, tag_table)
+      
+      sampling_seconds <- pilr.utils.r::get_setting("read_interval",
+                                                    params$settings) %>%
+        pilr.utils.r::safe_numeric()
+      
+      fm1 <- calculate_rmr(rmr_data, sampling_seconds)
+      ei_meas <- pilr.utils.r::get_setting("energy_intake_measured", settings,
+                                           required = FALSE) %>%
+        pilr.utils.r::safe_numeric()
+      ei_meas <- ifelse(is.na(ei_meas), 0, ei_meas)
+      
+      ## only want to add this to the Human Study row
+      ret$rmr_intercept[ret$tag_label == "HumanStudy"] <- coef(fm1)[1]
+      
+      
+      
+      ## add the adjusted rmr intercept
+      ## What to return if ei_meas is 0, I suppose Inf, but is that an error?
+      sleep <- subset(ret, tag_label == "Sleep")
+      if(nrow(sleep)) {
+        ## which ee to use? 
+        tef2 <- (((ret$rmr_intercept -
+                     (sleep$ee / 1440)) / ei_meas ) *
+                   (15 * 60) * 100)
+        
+        ## might have divided by 0 above with ei_meas if the
+        ## setting wasn't present
+        ret$tef2[ret$tag_label == "HumanStudy"] <- ifelse(!is.finite(tef2), 0, tef2)
+      } else {
+        ret$tef2[ret$tag_label == "HumanStudy"] <- 0
+      }
+      
+      ret$rmr_slope[ret$tag_label == "HumanStudy"] <- coef(fm1)[2]
+    }
+    ## For each meal calculate rmr_intercept and then tef2
+    if("Regression 1" %in% event_tags$tags) {
+      
+      rmr_data <- pilr.utils.r::subset_event_tags("Regression1", calrq, tag_table)
+      
+      sampling_seconds <- pilr.utils.r::get_setting("read_interval",
+                                                    params$settings) %>%
+        pilr.utils.r::safe_numeric()
+      
+      fm1 <- calculate_rmr(rmr_data, sampling_seconds)
+      ei_meas <- pilr.utils.r::get_setting("energy_intake_measured", settings,
+                                           required = FALSE) %>%
+        pilr.utils.r::safe_numeric()
+      ei_meas <- ifelse(is.na(ei_meas), 0, ei_meas)
+      
+      ret$rmr_intercept[ret$tag_label == "Regression1"] <- coef(fm1)[1]
+      
+      
+      
+      ## add the adjusted rmr intercept
+      ## What to return if ei_meas is 0, I suppose Inf, but is that an error?
+      sleep <- subset(ret, tag_label == "Sleep")
+      if(nrow(sleep)) {
+        ## which ee to use? 
+        tef2 <- (((ret$rmr_intercept -
+                     (sleep$ee / 1440)) / ei_meas ) *
+                   (15 * 60) * 100)
+        ## might have divided by 0 above with ei_meas if the
+        ## setting wasn't present
+        ret$tef2[ret$tag_label == "Regression1"] <- ifelse(!is.finite(tef2), 0, tef2)
+      } else {
+        ret$tef2[ret$tag_label == "Regression1"] <- 0
+      }
+      
+      ret$rmr_slope[ret$tag_label == "Regression1"] <- coef(fm1)[2]
+    }
+    if("Regression 2" %in% event_tags$tags) {
+      
+      rmr_data <- pilr.utils.r::subset_event_tags("Regression2", calrq, tag_table)
+      
+      sampling_seconds <- pilr.utils.r::get_setting("read_interval",
+                                                    params$settings) %>%
+        pilr.utils.r::safe_numeric()
+      
+      fm1 <- calculate_rmr(rmr_data, sampling_seconds)
+      ei_meas <- pilr.utils.r::get_setting("energy_intake_measured", settings,
+                                           required = FALSE) %>%
+        pilr.utils.r::safe_numeric()
+      ei_meas <- ifelse(is.na(ei_meas), 0, ei_meas)
+      
+      ret$rmr_intercept[ret$tag_label == "Regression2"] <- coef(fm1)[1]
+      
+      
+      
+      ## add the adjusted rmr intercept
+      ## What to return if ei_meas is 0, I suppose Inf, but is that an error?
+      sleep <- subset(ret, tag_label == "Sleep")
+      if(nrow(sleep)) {
+        ## which ee to use? 
+        tef2 <- (((ret$rmr_intercept -
+                     (sleep$ee / 1440)) / ei_meas ) *
+                   (15 * 60) * 100)
+        ## might have divided by 0 above with ei_meas if the
+        ## setting wasn't present
+        ret$tef2[ret$tag_label == "Regression2"] <- ifelse(!is.finite(tef2), 0, tef2)
+      } else {
+        ret$tef2[ret$tag_label == "Regression2"] <- 0
+      }
+      
+      ret$rmr_slope[ret$tag_label == "Regression2"] <- coef(fm1)[2]
+    }
+    if("Regression 3" %in% event_tags$tags) {
+      
+      rmr_data <- pilr.utils.r::subset_event_tags("Regression3", calrq, tag_table)
+      
+      sampling_seconds <- pilr.utils.r::get_setting("read_interval",
+                                                    params$settings) %>%
+        pilr.utils.r::safe_numeric()
+      
+      fm1 <- calculate_rmr(rmr_data, sampling_seconds)
+      ei_meas <- pilr.utils.r::get_setting("energy_intake_measured", settings,
+                                           required = FALSE) %>%
+        pilr.utils.r::safe_numeric()
+      ei_meas <- ifelse(is.na(ei_meas), 0, ei_meas)
+      
+      ret$rmr_intercept[ret$tag_label == "Regression3"] <- coef(fm1)[1]
+      
+      
+      
+      ## add the adjusted rmr intercept
+      ## What to return if ei_meas is 0, I suppose Inf, but is that an error?
+      sleep <- subset(ret, tag_label == "Sleep")
+      if(nrow(sleep)) {
+        ## which ee to use? 
+        tef2 <- (((ret$rmr_intercept -
+                     (sleep$ee / 1440)) / ei_meas ) *
+                   (15 * 60) * 100)
+        ## might have divided by 0 above with ei_meas if the
+        ## setting wasn't present
+        ret$tef2[ret$tag_label == "Regression3"] <- ifelse(!is.finite(tef2), 0, tef2)
+      } else {
+        ret$tef2[ret$tag_label == "Regression3"] <- 0
+      }
+      
+      ret$rmr_slope[ret$tag_label == "Regression3"] <- coef(fm1)[2]
     }
     
-     sampling_seconds <- pilr.utils.r::get_setting("read_interval",
-                                                  params$settings) %>%
-      pilr.utils.r::safe_numeric()
-    
-     # Fix when no activity column present
-     act_test <- rmr_data$Activity
-     if(is.null(act_test)){
-       rmr_data$Activity <- 0
-     }
-    
-    fm1 <- calculate_rmr(rmr_data, sampling_seconds)
-    ei_meas <- pilr.utils.r::get_setting("energy_intake_measured", settings,
-                                         required = FALSE) %>%
-      pilr.utils.r::safe_numeric()
-    ei_meas <- ifelse(is.na(ei_meas), 0, ei_meas)
-    
-    ## only want to add this to the Human Study row
-    ret$rmr_intercept <- ifelse(ret$tag_label == "HumanStudy",
-                                coef(fm1)[1], 0)
-    
-    
-    
-    ## add the adjusted rmr intercept
-    ## What to return if ei_meas is 0, I suppose Inf, but is that an error?
-    sleep <- subset(ret, tag_label == "Sleep")
-    if(nrow(sleep)) {
-      ## which ee to use? 
-      ret$tef2 <- (((ret$rmr_intercept -
-                       (sleep$ee / 1440)) / ei_meas ) *
-                     (15 * 60) * 100)
-      ## might have divided by 0 above with ei_meas if the
-      ## setting wasn't present
-      ret$tef2 <- ifelse(!is.finite(ret$tef2), 0, ret$tef2)
-    } else {
-      ret$tef2 <- 0
-    }
-    
-    ret$rmr_slope <- coef(fm1)[2]
+    # if (pilr.utils.r::has_timetag("Regression Data", event_tags)) {
+    #   rmr_data <- pilr.utils.r::subset_event_tags("RegressionData", calrq, tag_table)
+    # } else {
+    #   rmr_data <- pilr.utils.r::subset_event_tags("HumanStudy", calrq, tag_table)
+    # }
+    # 
+    #  sampling_seconds <- pilr.utils.r::get_setting("read_interval",
+    #                                               params$settings) %>%
+    #   pilr.utils.r::safe_numeric()
+    # 
+    #  # Fix when no activity column present
+    #  act_test <- rmr_data$Activity
+    #  if(is.null(act_test)){
+    #    rmr_data$Activity <- 0
+    #  }
+    # 
+    # fm1 <- calculate_rmr(rmr_data, sampling_seconds)
+    # ei_meas <- pilr.utils.r::get_setting("energy_intake_measured", settings,
+    #                                      required = FALSE) %>%
+    #   pilr.utils.r::safe_numeric()
+    # ei_meas <- ifelse(is.na(ei_meas), 0, ei_meas)
+    # 
+    # ## only want to add this to the Human Study row
+    # ret$rmr_intercept <- ifelse(ret$tag_label == "HumanStudy",
+    #                             coef(fm1)[1], 0)
+    # 
+    # ## add the adjusted rmr intercept
+    # ## What to return if ei_meas is 0, I suppose Inf, but is that an error?
+    # sleep <- subset(ret, tag_label == "Sleep")
+    # if(nrow(sleep)) {
+    #   ## which ee to use? 
+    #   ret$tef2 <- (((ret$rmr_intercept -
+    #                    (sleep$ee / 1440)) / ei_meas ) *
+    #                  (15 * 60) * 100)
+    #   ## might have divided by 0 above with ei_meas if the
+    #   ## setting wasn't present
+    #   ret$tef2 <- ifelse(!is.finite(ret$tef2), 0, ret$tef2)
+    # } else {
+    #   ret$tef2 <- 0
+    # }
+    # 
+    # ret$rmr_slope <- coef(fm1)[2]
     
   } else {
     ## not enough datapoints to fit regression
@@ -291,6 +550,8 @@ human_summary <- function(data, params, ...) {
       }
     }
   }
+  ## Set TEF2 to NA for unused tags
+  ret$tef2[ret$tef2==0] <- NA
   
   ret
 }
@@ -305,18 +566,6 @@ compute_human_summary <- function(data, tag_label, settings,
   sampling_seconds <- median(diff(as.POSIXlt(data$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
   units(sampling_seconds) <- "secs"
   sampling_seconds <- as.numeric(sampling_seconds)
-  
-  #sampling_seconds <- pilr.utils.r::get_setting("read_interval",
-  #                                              settings) %>%
-  #  pilr.utils.r::safe_numeric()
-  
-  ## (DELETE)obtain all settings we'll need for further computations
-  #nitrogen <- pilr.utils.r::get_setting("nitrogen", settings,
-  #                       required = FALSE) %>%
-  #                           pilr.utils.r::safe_numeric()
-  
-  ## if nitrogen is NA, set to 0 in this case
-  #nitrogen <- ifelse(is.na(nitrogen), 0, nitrogen)
   
   ei_meas <- pilr.utils.r::get_setting("energy_intake_measured", settings,
                                        required = FALSE) %>% pilr.utils.r::safe_numeric()

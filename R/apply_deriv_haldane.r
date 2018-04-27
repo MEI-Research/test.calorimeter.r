@@ -9,18 +9,18 @@ apply_haldane <- function(data, params, ...) {
   tm <- as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")
   haldane$haldane$Processed <- strftime(tm , "%Y-%m-%dT%H:%M:%S%z")
   
-  ## Add Activity column from raw calrq data
-  # cal_seconds <- pilr.utils.r::get_setting("read_interval", params$settings) %>% pilr.utils.r::safe_numeric()
+  # Add Activity column from raw calrq data
   cal_seconds <- median(diff(as.POSIXlt(data$calrq$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
   units(cal_seconds) <- "secs"
   cal_seconds <- as.numeric(cal_seconds)
   
+  # Add Activity
   if (!is.null(data$calrq$Activity)) {
     haldane$haldane$Activity <- data$calrq$Activity
     haldane$haldane$Activity_Rate <- data$calrq$Activity / cal_seconds
   }
   
-  ## try only saving cols we need
+  # try only saving cols we need
   keep <- c("Time", "Processed", "haldane", "recalc_vo2", "recalc_vco2",
             "recalc_vo2_0vol","recalc_vco2_0vol",
             "haldane_outflow_0vol","haldane_inflow_0vol",
@@ -77,18 +77,15 @@ deriv_haldane <- function(data, params, ...) {
                                       params$settings) 
   cal_volume <- pilr.utils.r::get_setting("volume",
                                           params$settings) %>%
-    pilr.utils.r::safe_numeric()
-  #cal_seconds <- pilr.utils.r::get_setting("read_interval",
-  #                                         params$settings) %>%
-  #  pilr.utils.r::safe_numeric()
+  pilr.utils.r::safe_numeric()
+
   cal_seconds <- median(diff(as.POSIXlt(haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
-  # cal_seconds <- median(diff(as.POSIXlt(data$calrq$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
   units(cal_seconds) <- "secs"
   cal_seconds <- as.numeric(cal_seconds)
   
   deriv_window <- pilr.utils.r::get_setting("deriv_window", params$settings,
                                             required = FALSE) %>%
-    pilr.utils.r::safe_numeric()
+  pilr.utils.r::safe_numeric()
   
   deriv_window <- ifelse(is.na(deriv_window), 8, deriv_window)
   
@@ -123,8 +120,7 @@ deriv_haldane <- function(data, params, ...) {
                             value = 0)
       }
       else {
-        # n2_df <- rbind(n2_df, data.frame(datetime = as.POSIXct(paste(substr(temp$value[[2]]$`$date`,1,10),
-        n2_df <- rbind(n2_df, data.frame(datetime = as.POSIXct(paste(substr(temp$value[[2]],1,10),
+        n2_df <- rbind(n2_df, data.frame(datetime = as.POSIXct(paste(as.Date(temp$value[[2]]),
                                                                      temp$value[[3]]), format="%Y-%m-%d %H:%M:%S"),
                                          value = temp$value[[1]]))
       }
