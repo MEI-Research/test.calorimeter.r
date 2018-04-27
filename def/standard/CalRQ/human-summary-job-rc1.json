@@ -177,7 +177,7 @@
         "save_request":0,
         "save_response":0,
         "delete_if_successful":0,
-        "package_version":"master",
+        "package_version":"test-1.1",
         "package_url":"https://github.com/eruud/test.calorimeter.r",
         "package_function":"process_cal_human",
         "resource_path":"/github/MeiResearchLtd/pilr.dpu.r/R/pilr_dpu",
