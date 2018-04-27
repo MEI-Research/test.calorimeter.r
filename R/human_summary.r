@@ -247,7 +247,7 @@ human_summary <- function(data, params, ...) {
   ret <- subset(ret, tag_label != "Null")
   
   ## Interpret rest duration array variable JSON
-  from_json <- fromJSON(params$settings$rest_durations$value[[1]])
+  # from_json <- fromJSON(params$settings$rest_durations$value[[1]])
   
   ## Create data frame of rest durations
   rest_df <- data.frame(post_meal = c(), rest = c())
