@@ -2,6 +2,7 @@
 #'@export
 #'@import jsonlite dplyr ggvis
 process_cal_human <- function(data, params, ...) {
+  traceback()
   ## some notes on syntax with this function.
   ## some of these intermediate functions might return things of interest?
   
