@@ -18,7 +18,7 @@ process_cal_human <- function(data, params, ...) {
   ## what do we need to currently fake to get this working from pilr?
   ## settings
   
-  
+  message('Starting human summary job')
   
   event_tags  <- data$event_tags
   
