@@ -2,7 +2,6 @@
 #'@export
 #'@import jsonlite dplyr ggvis
 process_cal_human <- function(data, params, ...) {
-  traceback()
   ## some notes on syntax with this function.
   ## some of these intermediate functions might return things of interest?
   
@@ -247,16 +246,21 @@ human_summary <- function(data, params, ...) {
   ## remove Null tag
   ret <- subset(ret, tag_label != "Null")
   
-  ## Interpret rest duration array variable JSON
+  # Interpret rest duration array variable JSON
   from_json <- fromJSON(params$settings$rest_durations$value[[1]])
-  
-  ## Create data frame of rest durations
+
+  # Create data frame of rest durations
   rest_df <- data.frame(post_meal = c(), rest = c())
   for (i in 1:length(from_json)) {
     temp <- as.data.frame(from_json[i,1])
     rest_df <- rbind(rest_df, data.frame(post_meal = temp$value[[1]],
                                          rest = temp$value[[2]]))
   }
+  
+  # rest_df <- data.frame(1)
+  # rest_df$post_meal <- 360
+  # rest_df$rest <- 1080
+  # rest_df <- rest_df[2:3]
   
   ret$tef1 <- NA
   meal_count <- 1

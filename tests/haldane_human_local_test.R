@@ -4,6 +4,7 @@ library(uuid)
 library(dplyr)
 library(jsonlite)
 library(base64enc)
+# options(stringsAsFactors = FALSE)
 
 # Clear old values
 remove(params)
@@ -13,6 +14,8 @@ options(pilr_server_default = "http://cloud.pilrhealth.com")
 options(pilr_project_default = "500_practiceproject")
 options(pilr_default_access_code = "e98b5906-546a-4a8a-827a-4f840ec20aaa")
 participant = "500-0024v1"
+  # "500-0024v1_N2Test"
+  # "500-0024v1"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema = "1", 
@@ -46,12 +49,13 @@ fields = list()
 for (i in 1:length(testlist$fields))
 {
   fields[i] = list(as.data.frame(testlist$fields[[i]]))
-  # fields[[i]]$value = list(as.numeric(testlist$fields[[i]]$value[1]))
+  fields[[i]]$value[1] = list(as.numeric(testlist$fields[[i]]$value[1]))
+  fields[[i]]$value[2] = list(as.numeric(testlist$fields[[i]]$value[2]))
   print(i)
 }
 end
 
-test = data.frame(matrix(1,8))
+test = data.frame(matrix(1,1))
 test$fields = fields
 test <- subset(test, select = -1)
 params$settings$rest_durations$value <- toJSON(test)
