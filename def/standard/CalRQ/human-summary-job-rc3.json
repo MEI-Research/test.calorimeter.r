@@ -1,7 +1,7 @@
 {
     "definition_type":"job",
-    "code":"calorimeter_human_summary_job_rc1",
-    "name":"Human CalRQ Summary v1.2",
+    "code":"calorimeter_human_summary_job_rc3",
+    "name":"Human CalRQ Summary v1.3",
     "version":1,
     "description":"Compute summaries and generate report for CalRQ human studies.",
     "datasets":[
@@ -253,10 +253,14 @@
                 "code":"pilrhealth:calrq:multiple_n2",
                 "mapping":"multiple_n2"
             },
-			{
-				"code":"pilrhealth:calrq:sleep_threshold",
-				"mapping":"sleep_threshold"
-			}
+	    {
+		"code":"pilrhealth:calrq:sleep_threshold",
+		"mapping":"sleep_threshold"
+       	    },	
+      	    {
+		"code": "pilrhealth:calrq:rest_durations",
+		"mapping": "rest_durations"
+            }
         ],
         "filter_params":[
             "participant",
