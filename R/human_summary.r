@@ -249,7 +249,7 @@ human_summary <- function(data, params, ...) {
   # Interpret rest duration array variable JSON
   #from_json <- fromJSON(params$settings$rest_durations$value[[1]])
   from_json <- pilr.utils.r::get_setting("rest_durations",params$settings)
-  from_json <- fromJSON(from_json$value[[1]])
+  from_json <- fromJSON(from_json)
   
   # Create data frame of rest durations
   rest_df <- data.frame(post_meal = c(), rest = c())

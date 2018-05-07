@@ -174,8 +174,8 @@
     ],
     "runner":{
         "clazz":"com.pilrhealth.tools.processing_with_r.RProcOpenCPUJobRunner",
-        "save_request":0,
-        "save_response":0,
+        "save_request":1,
+        "save_response":1,
         "delete_if_successful":0,
         "package_version":"master",
         "package_url":"https://github.com/eruud/test.calorimeter.r",
