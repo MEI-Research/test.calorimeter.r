@@ -135,6 +135,8 @@ deriv_haldane <- function(data, params, ...) {
                         value = 0)
   }
     
+  # Convert from 24h to minutely
+  # n2_df$value <- n2_df$value / (60*24)
   
   if(grepl("push", config, ignore.case = TRUE)) {
     message("using config: push")
