@@ -1,7 +1,7 @@
 ## this is our entry point from opencpu
 #'@export
 #'@import jsonlite dplyr ggvis
-process_cal_human <- function(data, params, ...) {
+process_cal_human <- function(data, params, ...) { 
   ## some notes on syntax with this function.
   ## some of these intermediate functions might return things of interest?
   
@@ -98,15 +98,12 @@ process_cal_human <- function(data, params, ...) {
   
   human$pt <- unique(data$calrq$pt)[1]
   human$id <- sapply(1:nrow(human)*0,uuid::UUIDgenerate)
-    # System UUID
-    # system(paste0("uuid", " -v4", " -n", nrow(human)), intern = TRUE)
   human$timestamp <- format(human$start_time, format = "%Y-%m-%dT%H:%M:%SZ")
   
   
   ret$haldane$pt <- unique(data$calrq$pt)[1]
   
   ret$haldane$id <- sapply(1:nrow(ret$haldane)*0,uuid::UUIDgenerate)
-    # system(paste0("uuid", " -v4", " -n", nrow(ret$haldane)), intern = TRUE)
   ret$haldane$timestamp <- format(ret$haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")
   
   
@@ -281,7 +278,8 @@ human_summary <- function(data, params, ...) {
                                       do_tf_correct = FALSE)$mr * rest_df$post_meal[meal_count]  #6 hours
     
     ee_pre <- ree$ee            
-    ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    # ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    ret$tef_measured <- ((mr_pre * 360) + (mr_post * 1080)) / (ree$minutes)
     
     ret$tef1[ret$tag_label == "PostMeal1"] <- ret$tef_measured[1]
     
@@ -301,7 +299,8 @@ human_summary <- function(data, params, ...) {
                                       do_tf_correct = FALSE)$mr * rest_df$post_meal[meal_count]  #6 hours
     
     ee_pre <- ree$ee               
-    ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    # ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    ret$tef_measured <- ((mr_pre * 360) + (mr_post * 1080)) / (ree$minutes)
     ret$tef1[ret$tag_label == "PostMeal2"] <- ret$tef_measured[1]
     
   }
@@ -320,7 +319,8 @@ human_summary <- function(data, params, ...) {
                                       do_tf_correct = FALSE)$mr * rest_df$post_meal[meal_count]  #6 hours
     
     ee_pre <- ree$ee               
-    ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    # ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    ret$tef_measured <- ((mr_pre * 360) + (mr_post * 1080)) / (ree$minutes)
     ret$tef1[ret$tag_label == "PostMeal3"] <- ret$tef_measured[1]
   }
   
@@ -336,7 +336,8 @@ human_summary <- function(data, params, ...) {
                                       do_tf_correct = FALSE)$mr * 360  #6 hours
     
     ee_pre <- ree$ee               
-    ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    # ret$tef_measured <- (mr_pre + mr_post) / (ee_pre * 1440 / ree$minutes)
+    ret$tef_measured <- ((mr_pre * 360) + (mr_post * 1080)) / (ree$minutes)
     ret$tef1 <- ret$tef_measured
     ## Note: remove tef_measured when instrument dataset def updated
   } else {
