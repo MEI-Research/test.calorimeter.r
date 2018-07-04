@@ -213,7 +213,7 @@ human_summary <- function(data, params, ...) {
   
   ## add in the Valid data tag, and subset appropriately
   if(any(event_tags$tags == "Invalid Data")) {
-    tag_table$TT_ValidData <- !tag_table$TT_InvalidData
+    tag_table$TT_ValidData <- !tag_table$TT_Invalid
     calrq <- pilr.utils.r::subset_event_tags("ValidData", calrq, tag_table)
     tag_table <- subset(tag_table, TT_ValidData == TRUE)
     
