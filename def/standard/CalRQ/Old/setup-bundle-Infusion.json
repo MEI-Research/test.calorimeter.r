@@ -1,12 +1,12 @@
 {
   "definition_type": "bundle",
-  "code": "gfhnrc_calorimeter_bundle_001",
+  "code": "calorimeter_bundle_infusion_2",
   "version": 1,
-  "name": "Calorimeter Project Setup Bundle (GFHNRC)",
+  "name": "Calorimeter Infusion Setup Bundle",
   "description": "This component bundle adds the CalRQ instrument to a project, as well as the common file handlers, variables, processing jobs, and tools used in a calorimeter study.",
   "instruments": [
     {
-      "definition_source_rel": "./base-instrument.json"
+      "definition_source_rel": "./base-instrument-infusion.json"
     }
   ],
   "variables": [
@@ -157,12 +157,6 @@
   ],
   "jobs": [
     {
-      "definition_source_rel": "./burn-summary-job-rc1.json"
-    },
-    {
-      "definition_source_rel": "./human-summary-job-rc1-GF-Custom.json"
-    },
-    {
       "definition_source_rel": "./infusion-summary-job-rc1.json"
     },
     {
@@ -171,13 +165,13 @@
   ],
   "tool_contents": [
     {
-      "definition_source_rel": "./evtagger-sample-config-tool-content-1.json"
+      "definition_source_rel": "./evtagger-sample-config-tool-content-infusion.json"
     }
   ],
    "periods":[  
       {  
          "code":"active_period",
-         "name":"Participant Active Period",
+         "name":"Infusion Period",
          "epochs":[  
             {  
                "code":"epoch_1",
@@ -193,7 +187,7 @@
          "activeInstruments":[  
             {  
                "instrument":"calrq",
-		"settings":[  
+               "settings":[  
                   {  
                      "code":"pilrhealth:calrq:chamber_volume",
                      "period":null,
@@ -204,15 +198,13 @@
                      "code":"pilrhealth:calrq:co2_mfc",
                      "period":null,
                      "epoch":null,
-                     "value":null
+                     "value":["MFC 2"]
                   },
                   {  
                      "code":"pilrhealth:calrq:configuration",
                      "period":null,
                      "epoch":null,
-                     "value":[  
-                        "Push - Absolute"
-                     ]
+                     "value":["Push - Absolute"]
                   },
                   {  
                      "code":"pilrhealth:calrq:gas_type",
@@ -236,7 +228,7 @@
                      "code":"pilrhealth:calrq:n2_mfc",
                      "period":null,
                      "epoch":null,
-                     "value":null
+                     "value":["MFC 3"]
                   },
                   {  
                      "code":"pilrhealth:calrq:predicted_energy_balance",
