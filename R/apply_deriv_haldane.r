@@ -109,30 +109,49 @@ deriv_haldane <- function(data, params, ...) {
     
     n2_df <- data.frame(date = c(), time = c(), value = c())
     default_N2 <- FALSE
+    avg_N2 <- FALSE
     for (i in 1:nrow(from_json)) {
       temp <- as.data.frame(from_json[i,1])
       if(is.na(temp$value[[2]])) {
-        ##stop("No values set for Urine Nitrogen Mass participant variable.")
+        # no value set for n2
         default_N2 <- TRUE
+      }
+      if(is.na(params$settings$urine_nitrogen_start_time$value[[1]])) {
+        # use avging method
+        avg_N2 <- TRUE
       }
       if (default_N2) {
         n2_df <- data.frame(datetime = as.POSIXct("2012-01-01 01:00:00", format="%Y-%m-%d %H:%M:%S"),
                             value = 0)
-      }
-      else {
+      } else if (avg_N2) {
+        # Use start value for first iteration
+        if (i == 1){
+          t1 <- as.POSIXct(params$settings$urine_nitrogen_start_time$value[[1]], format="%Y-%m-%dT%H:%M:%SZ")
+        } else{
+          t1 <- as.POSIXct(paste(as.Date(from_json[i-1,1][[1]]$value[[2]]),from_json[i-1,1][[1]]$value[[3]]), format="%Y-%m-%d %H:%M:%S")
+        }
+        t2 <- as.POSIXct(paste(as.Date(temp$value[[2]]),temp$value[[3]]), format="%Y-%m-%d %H:%M:%S")
+        d_time = as.numeric(difftime(t2,t1,units = "mins"))
+        if (dt < 0){
+          stop('negative delta T for urinary N2: check dates')
+        }
+        
+        # Convert static value to average by minutes
+        n2_avg <- temp$value[[1]] / d_time
+        
+        n2_df <- rbind(n2_df, data.frame(datetime = as.POSIXct(paste(as.Date(temp$value[[2]]),
+                                                                     temp$value[[3]]), format="%Y-%m-%d %H:%M:%S"),
+                                         value = n2_avg))
+      } else if (pilr.utils.r::has_setting("urine_nitrogen", params$settings)){
+        n2_val <- pilr.utils.r::get_setting("urine_nitrogen", params$settings)
+        n2_df <- data.frame(datetime = as.POSIXct("2012-01-01 01:00:00", format="%Y-%m-%d %H:%M:%S"),
+                            value = n2_val)
+      } else {
         n2_df <- rbind(n2_df, data.frame(datetime = as.POSIXct(paste(as.Date(temp$value[[2]]),
                                                                      temp$value[[3]]), format="%Y-%m-%d %H:%M:%S"),
                                          value = temp$value[[1]]))
       }
     }
-  }
-  else if (pilr.utils.r::has_setting("urine_nitrogen", params$settings)){
-    n2_val <- pilr.utils.r::get_setting("urine_nitrogen", params$settings)
-    n2_df <- data.frame(datetime = as.POSIXct("2012-01-01 01:00:00", format="%Y-%m-%d %H:%M:%S"),
-                        value = n2_val)
-  } else {
-    n2_df <- data.frame(datetime = as.POSIXct("2012-01-01 01:00:00", format="%Y-%m-%d %H:%M:%S"),
-                        value = 0)
   }
     
   # Convert from 24h to minutely

@@ -11,9 +11,9 @@ remove(params)
 
 # Set options for server, project, access code
 options(pilr_server_default = "http://cloud.pilrhealth.com")
-options(pilr_project_default = "508_test_project")
-options(pilr_default_access_code = "d8837eca-4066-4933-9f76-2ce5d95e7250")
-participant = "508-0010"
+options(pilr_project_default = "n2_test_project")
+options(pilr_default_access_code = "bf62c048-0f14-4e7f-a24c-8516ffd5a14c")
+participant = "test_participant_1"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema = "1", 
@@ -23,14 +23,14 @@ data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema 
 params = list(settings = read_pilr_params(data_set = "pilrhealth:calrq:calrq_data", schema = "1", instrument = "calrq", participant = participant, period = "active_period", epoch = "epoch_1"))
 
 # Add package information to params
-params$package <- "test.calorimeter.r"
+params$package <- "gf.calorimeter.r"
 
 # Fix multiple N2 array
 testlist <- eval(parse("", n=NULL, gsub('\n', "", params$settings$multiple_n2$value, fixed = TRUE)))
 fields = list()
 for (i in 1:length(testlist$fields))
 {
-  fields[i] = list(as.data.frame(testlist$fields[[i]]))
+  fields[i] = list(as.data.frame(testlist$fields[[i]])) 
   fields[[i]]$value = list(as.numeric(testlist$fields[[i]]$value[1]),list('$date' = testlist$fields[[i]]$value[2]),testlist$fields[[i]]$value[3])
   print(i)
 }
