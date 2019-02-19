@@ -112,7 +112,8 @@ deriv_haldane <- function(data, params, ...) {
     default_N2 <- FALSE
     avg_N2 <- TRUE
     
-    if (is.null(params$settings$urine_nitrogen_start_time$value[[1]])) {
+    if (!(pilr.utils.r::has_setting("urine_nitrogen_start_time", params$settings))) {
+      # (is.null(params$settings$urine_nitrogen_start_time$value[[1]])) {
       
       # use avging method if start time is present
       avg_N2 <- FALSE
@@ -136,8 +137,10 @@ deriv_haldane <- function(data, params, ...) {
           # Use start value for first iteration
           if (i == 1) {
             t1 <-
-              as.POSIXct(params$settings$urine_nitrogen_start_time$value[[1]],
+              as.POSIXct(pilr.utils.r::get_setting("urine_nitrogen_start_time", params$settings),
                          format = "%Y-%m-%dT%H:%M:%SZ")
+            # as.POSIXct(params$settings$urine_nitrogen_start_time$value[[1]],
+            #            format = "%Y-%m-%dT%H:%M:%SZ")
           } else{
             t1 <-
               as.POSIXct(paste(as.Date(from_json[i - 1, 1][[1]]$value[[2]]), from_json[i -
