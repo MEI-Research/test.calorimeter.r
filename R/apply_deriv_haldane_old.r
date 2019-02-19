@@ -1,48 +1,39 @@
 ## this is our entry point from pilr on file upload
+
 #'@export
-apply_haldane <- function(data, params, ...) {
+apply_haldane_old <- function(data, params, ...) {
   haldane <- apply_null_offset(data, params) %>%
     apply_slope_offset(params) %>%
-    deriv_haldane(params)
+    deriv_haldane_old(params)
   
   # Save processing time
   tm <- as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")
   haldane$haldane$Processed <- strftime(tm , "%Y-%m-%dT%H:%M:%S%z")
   
-  # Add Activity column from raw calrq data
-  cal_seconds <- median(diff(as.POSIXlt(data$calrq$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
-  units(cal_seconds) <- "secs"
-  cal_seconds <- as.numeric(cal_seconds)
-  
-  # Add Activity
+  ## Add Activity column from raw calrq data
+  cal_seconds <- pilr.utils.r::get_setting("read_interval", params$settings) %>% pilr.utils.r::safe_numeric()
   if (!is.null(data$calrq$Activity)) {
     haldane$haldane$Activity <- data$calrq$Activity
     haldane$haldane$Activity_Rate <- data$calrq$Activity / cal_seconds
   }
   
-  # try only saving cols we need
+  ## try only saving cols we need
   keep <- c("Time", "Processed", "haldane", "recalc_vo2", "recalc_vco2",
-            "recalc_vo2_0vol","recalc_vco2_0vol",
-            "haldane_outflow_0vol","haldane_inflow_0vol",
-            "OutflowRate","InflowRate",
-            "haldane_outflow","haldane_inflow",
             "recalc_ee", "recalc_rq", "nulled_outflow_o2",
-            "nulled_inflow_n2","nulled_outflow_n2",
             "nulled_outflow_co2", "nulled_inflow_o2",
-            "nulled_inflow_co2", "do2", "dco2","dn2", "inflow_rate",
-            "MFCFlow_1","MFCFlow_2","MFCFlow_3","MFCFlow_4","MFCFlow_5",
+            "nulled_inflow_co2", "do2", "dco2", "inflow_rate",
             "outflow_rate", "id", "pt", "timestamp", "nitrogen",
             "np_rq", "protein_ox", "cho_ox", "fat_ox", "Activity", "Activity_Rate")
   
   # Save output datasets and files in list
-  ret <- list(datasets = list(haldane = haldane$haldane[colnames(haldane$haldane) %in% keep]),
+  ret <- list(datasets = list(haldane = haldane$haldane[keep %in% colnames(haldane$haldane)]),
               files = list())
   
   ret
 }
 
 #'@export
-deriv_haldane <- function(data, params, ...) {
+deriv_haldane_old <- function(data, params, ...) {
   
   haldane <- data$sloped
   haldane <- haldane[order(haldane$Time), ]
@@ -54,8 +45,6 @@ deriv_haldane <- function(data, params, ...) {
   haldane$nulled_outflow_co2 <- haldane$nulled_OutflowCO2
   haldane$nulled_inflow_o2 <- haldane$nulled_InflowO2
   haldane$nulled_inflow_co2 <- haldane$nulled_InflowCO2
-  haldane$nulled_inflow_n2 <- 100 - haldane$nulled_inflow_o2 - haldane$nulled_inflow_co2
-  haldane$nulled_outflow_n2 <- 100 - haldane$nulled_outflow_o2 - haldane$nulled_outflow_co2
   
   ## make sure all are non-missing (NA, NaN)
   ## per convo with erica, check that these are all non NA
@@ -77,29 +66,24 @@ deriv_haldane <- function(data, params, ...) {
                                       params$settings) 
   cal_volume <- pilr.utils.r::get_setting("volume",
                                           params$settings) %>%
-  pilr.utils.r::safe_numeric()
-
-  cal_seconds <- median(diff(as.POSIXlt(haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
-  units(cal_seconds) <- "secs"
-  cal_seconds <- as.numeric(cal_seconds)
+    pilr.utils.r::safe_numeric()
+  cal_seconds <- pilr.utils.r::get_setting("read_interval",
+                                           params$settings) %>%
+    pilr.utils.r::safe_numeric()
   
   deriv_window <- pilr.utils.r::get_setting("deriv_window", params$settings,
                                             required = FALSE) %>%
-  pilr.utils.r::safe_numeric()
+    pilr.utils.r::safe_numeric()
   
   deriv_window <- ifelse(is.na(deriv_window), 8, deriv_window)
   
   ## calc derivatives and haldane
-  haldane$do2 <- derivative(haldane$nulled_outflow_o2,
-                            data_interval = cal_seconds,
-                            derivative_window = deriv_window)
+  haldane$do2 <- derivative_old(haldane$nulled_outflow_o2,
+                                data_interval = cal_seconds,
+                                derivative_window = deriv_window)
   
-  haldane$dco2 <- derivative(haldane$nulled_outflow_co2,
-                             data_interval = cal_seconds)
-  
-  haldane$dn2 = - haldane$do2 - haldane$dco2
-  
-  ## stop(paste(capture.output(summary(haldane)), collapse = "\n"))
+  haldane$dco2 <- derivative_old(haldane$nulled_outflow_co2,
+                                 data_interval = cal_seconds)
   
   ## Create data frame of N2 values and date_time
   if (pilr.utils.r::has_setting("multiple_n2", params$settings)) {
@@ -179,45 +163,40 @@ deriv_haldane <- function(data, params, ...) {
         value = n2_val
       )
   }
-    
+  
   # Convert from 24h to minutely
   # n2_df$value <- n2_df$value / (60*24)
   
   if(grepl("push", config, ignore.case = TRUE)) {
     message("using config: push")
-    ret <- calc_push(haldane, cal_volume, cal_seconds, n2_df = n2_df)
+    ret <- calc_push_old(haldane, cal_volume, cal_seconds, n2_df = n2_df)
   } else {
     message("using config: pull")
-    ret <- calc_pull(haldane, cal_volume, cal_seconds, n2_df = n2_df)
+    ret <- calc_pull_old(haldane, cal_volume, cal_seconds, n2_df = n2_df)
   }
   
   list(haldane = ret, event_tags = event_tags)
 }
 
-#'@export
-derivative <- function(x, data_interval, derivative_window = 8,
-                       average_points = 1) {
-
-  # Calculate derivative using linear interpolation
-  # Initialize
-  dVector <- rep(0, length(x))
-  for (i in 1:length(x) ) {
-    # Set d/dt to zero if there are not enough points
-    if (i > derivative_window / 2 & i < length(x) - (derivative_window / 2) )
-    {
-      # Make fit array
-      fitdata <- list(data = x[(i - derivative_window / 2) : (i + derivative_window / 2)],time = (1:(derivative_window + 1))*(data_interval/60))
-      # Calculate fit
-      dVector[i] = lm(formula = data ~ time,fitdata)$coefficients[2]
-    } else
-    {
-      # Not enough points -> set to zero
-      dVector[i] <- 0
-    }
-  }
-  # Convert to time series to match old implementation
-  dVector <- as.ts(dVector)
+derivative_old <- function(x, data_interval, derivative_window = 8,
+                           average_points = 1) {
   
+  ## Calculate the number of data points needed to cover the desired
+  ## interval time
+  seconds_in_minute <- 60
+  resolution <- data_interval / seconds_in_minute
+  data_points <- derivative_window / resolution
+  
+  ## Create vector to sum the future points
+  f <- rep(0, data_points + 1)
+  ## what if average_points is large?
+  f[1:average_points] <- 1
+  f[(length(f) - average_points + 1) : length(f)] <- -1
+  
+  ## Filter the selected Header row using the filter vector
+  ## determined above
+  
+  dVector <- stats::filter(x, f) / derivative_window
   dVector[is.na(dVector)] <- 0
   dVector
 }
@@ -226,7 +205,7 @@ vo2_constant <- 3.941
 vco2_constant <- 1.104
 nitrogen_constant <- -2.17
 
-calc_push <- function(data, volume, cal_seconds, n2_df) {
+calc_push_old <- function(data, volume, cal_seconds, n2_df) {
   if(!length(data$InflowRate)) {
     stop("InflowRate not present, is calorimeter configuration setting correct?")
   }
@@ -244,12 +223,20 @@ calc_push <- function(data, volume, cal_seconds, n2_df) {
     }
   }  
   
-  data$haldane_outflow <- ( data$InflowRate * (data$nulled_inflow_n2/100) - (data$dn2/100) * volume ) / (data$nulled_outflow_n2/100)
+  data$haldane <- (1 - 0.01 * (data$nulled_inflow_o2 +
+                                 data$nulled_inflow_co2)) /
+    (1 - 0.01 * (data$nulled_outflow_o2 + data$nulled_outflow_co2))
   
   ## calc VO2 and VCO2 in ml/min
-  data$recalc_vo2 <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2 - data$do2 * volume)
-
-  data$recalc_vco2 <- -10/1000 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow * data$nulled_outflow_co2 - data$dco2 * volume)
+  data$recalc_vo2 <- (-1 * (data$InflowRate *
+                              (data$nulled_outflow_o2 * data$haldane -
+                                 data$nulled_inflow_o2)) -
+                        volume * data$do2) / 100
+  
+  data$recalc_vco2 <- (data$InflowRate * (data$nulled_outflow_co2 *
+                                            data$haldane -
+                                            data$nulled_inflow_co2) +
+                         volume * data$dco2) / 100
   
   data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
                         vco2_constant * data$recalc_vco2)) +
@@ -260,11 +247,14 @@ calc_push <- function(data, volume, cal_seconds, n2_df) {
   ## add these in so they are available for short circuit infusions
   ## they are the same calculations for recalc_vo2 and recalc_vco2,
   ## except for the term involving volume
-  data$haldane_outflow_0vol <- ( data$InflowRate * (data$nulled_inflow_n2/100) ) / (data$nulled_outflow_n2/100)
   
-  data$recalc_vo2_0vol <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow_0vol * data$nulled_outflow_o2)
+  data$recalc_vo2_0vol <- (-1 * (data$InflowRate *
+                                   (data$nulled_outflow_o2 * data$haldane -
+                                      data$nulled_inflow_o2))) / 100
   
-  data$recalc_vco2_0vol <- -10/1000 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow_0vol * data$nulled_outflow_co2)
+  data$recalc_vco2_0vol <- (data$InflowRate * (data$nulled_outflow_co2 *
+                                                 data$haldane -
+                                                 data$nulled_inflow_co2)) / 100
   
   data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
                              vco2_constant * data$recalc_vco2_0vol)) +
@@ -288,7 +278,7 @@ calc_push <- function(data, volume, cal_seconds, n2_df) {
   data
 }
 
-calc_pull <- function(data, volume, cal_seconds, n2_df) {
+calc_pull_old <- function(data, volume, cal_seconds, n2_df) {
   if(!length(data$OutflowRate)) {
     stop("OutflowRate not present, is calorimeter configuration setting correct?")
   }
@@ -304,23 +294,21 @@ calc_pull <- function(data, volume, cal_seconds, n2_df) {
       }
     }
   }  
-  data$haldane_inflow <- ( data$OutflowRate * (data$nulled_outflow_n2/100) + (data$dn2/100) * volume ) / (data$nulled_inflow_n2/100)
   
-  data$recalc_vo2 <- 10/1000 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$do2 * volume)
-  
-  data$recalc_vco2 <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$dco2 * volume)
+  data$haldane <- (1 - 0.01 * (data$nulled_outflow_o2 + data$nulled_outflow_co2)) /
+    (1 - 0.01 * (data$nulled_inflow_o2 + data$nulled_inflow_co2))
   
   ## calc VO2 and VCO2 in ml/min
-  # Old version of equations
-  #data$recalc_vo2 <- (data$OutflowRate * (data$nulled_inflow_o2 * data$haldane -
-  #                                          data$nulled_outflow_o2) -
-  #                      volume * data$do2) / 100
-  #
-  #data$recalc_vco2 <- (data$OutflowRate *
-  #                       (-1 * data$nulled_inflow_co2 * data$haldane +
-  #                          data$nulled_outflow_co2) +
-  #                       volume * data$dco2) / 100
-  #
+  
+  data$recalc_vo2 <- (data$OutflowRate * (data$nulled_inflow_o2 * data$haldane -
+                                            data$nulled_outflow_o2) -
+                        volume * data$do2) / 100
+  
+  data$recalc_vco2 <- (data$OutflowRate *
+                         (-1 * data$nulled_inflow_co2 * data$haldane +
+                            data$nulled_outflow_co2) +
+                         volume * data$dco2) / 100
+  
   ## already divided by 1000
   data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
                         vco2_constant * data$recalc_vco2)) +
@@ -332,9 +320,11 @@ calc_pull <- function(data, volume, cal_seconds, n2_df) {
   ## they are the same calculations for recalc_vo2 and recalc_vco2,
   ## except for the term involving volume
   
-  data$recalc_vo2 <- 10 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2)
-  
-  data$recalc_vco2 <- -10 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2)
+  data$recalc_vo2_0vol <- (data$OutflowRate * (data$nulled_inflow_o2 * data$haldane -
+                                                 data$nulled_outflow_o2)) / 100
+  data$recalc_vco2_0vol <- (data$OutflowRate *
+                              (-1 * data$nulled_inflow_co2 * data$haldane +
+                                 data$nulled_outflow_co2)) / 100
   
   ## already divided by 1000
   data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +

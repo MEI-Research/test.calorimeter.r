@@ -1,6 +1,6 @@
 ## this is our entry point from opencpu
 #'@export
-#'@import jsonlite dplyr ggvis
+#'@import jsonlite dplyr ggvis tidyverse xtable
 process_cal_human <- function(data, params, ...) { 
   ## some notes on syntax with this function.
   ## some of these intermediate functions might return things of interest?
@@ -45,9 +45,27 @@ process_cal_human <- function(data, params, ...) {
     stop("No event tags dataset was received. Are event tags set for this participant?")
   }
   
-  ret <- data %>% apply_null_offset(params) %>%
-    apply_slope_offset(params) %>%
-    deriv_haldane(params)
+  if (pilr.utils.r::has_setting("equation",params$settings)) {
+    equation <- pilr.utils.r::get_setting("equation",
+                                          params$settings)  
+  } else {
+    # Default for old projects
+    # equation <- "Updated"
+    equation <- "Old"
+  }
+  
+  if (equation == "Updated"){
+    message("Using updated equations")
+    ret <- data %>% apply_null_offset(params) %>%
+      apply_slope_offset(params) %>%
+      deriv_haldane(params)
+  } else {
+    message("Using old equations")
+    ret <- data %>% apply_null_offset(params) %>%
+      apply_slope_offset(params) %>%
+      deriv_haldane_old(params)
+  }
+  
   
   ## Organize each visit into a list
   visits <- c(tags = c())
@@ -245,17 +263,19 @@ human_summary <- function(data, params, ...) {
   
   # Interpret rest duration array variable JSON
   #from_json <- fromJSON(params$settings$rest_durations$value[[1]])
-  from_json <- pilr.utils.r::get_setting("rest_durations",params$settings)
-  from_json <- fromJSON(from_json)
   
-  # Create data frame of rest durations
-  rest_df <- data.frame(post_meal = c(), rest = c())
-  for (i in 1:length(from_json)) {
-    temp <- as.data.frame(from_json[i,1])
-    rest_df <- rbind(rest_df, data.frame(post_meal = temp$value[[1]],
-                                         rest = temp$value[[2]]))
+  if (pilr.utils.r::has_setting("rest_durations",params$settings)) {
+    from_json <- pilr.utils.r::get_setting("rest_durations",params$settings)
+    from_json <- fromJSON(from_json)
+    
+    # Create data frame of rest durations
+    rest_df <- data.frame(post_meal = c(), rest = c())
+    for (i in 1:length(from_json)) {
+      temp <- as.data.frame(from_json[i,1])
+      rest_df <- rbind(rest_df, data.frame(post_meal = temp$value[[1]],
+                                           rest = temp$value[[2]]))
+    }
   }
-  
   # rest_df <- data.frame(1)
   # rest_df$post_meal <- 360
   # rest_df$rest <- 1080
@@ -565,10 +585,14 @@ human_summary <- function(data, params, ...) {
 }
 
 compute_human_summary <- function(data, tag_label, settings,
-                                  do_tf_correct = FALSE) {
+                                  do_tf_correct = TRUE) {
+  ##3
+  if(length(grep("TT_SleepNoActivity",tag_label)) != 0) {
+    data <- subset(data, Activity <= pilr.utils.r::get_setting("sleep_threshold", settings))
+  }
   
-  if(tag_label == "TT_SleepNoActivity") {
-      data <- subset(data, Activity <= pilr.utils.r::get_setting("sleep_threshold", settings))
+  if(length(grep("TT_DayActivity",tag_label)) != 0) {
+    data <- subset(data, Activity <= pilr.utils.r::get_setting("activity_threshold", settings))
   }
   
   sampling_seconds <- median(diff(as.POSIXlt(data$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
