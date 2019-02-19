@@ -147,7 +147,7 @@ deriv_haldane <- function(data, params, ...) {
             as.POSIXct(paste(as.Date(temp$value[[2]]), temp$value[[3]]), format = "%Y-%m-%d %H:%M:%S")
           d_time = as.numeric(difftime(t2, t1, units = "mins"))
           if (d_time < 0) {
-            stop('negative delta T for urinary N2: check dates')
+            stop('negative delta T for urinary N2, check dates: ',t1,' to ',t2)
           }
           # Convert static value to average by minutes
           n2_avg <- temp$value[[1]] / d_time
