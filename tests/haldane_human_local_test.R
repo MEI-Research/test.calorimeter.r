@@ -9,41 +9,52 @@ library(base64enc)
 # Clear old values
 remove(params)
 
+options(pilr_server_default = "http://qa.pilrhealth.com")
+options(pilr_project_default = "workunittest")
+options(pilr_default_access_code = "19cbc77e-6141-4274-8c6d-eb2b4c9ff2f4")
+participant = "1sData"
+
 # Set options for server, project, access code
 # options(pilr_server_default = "http://cloud.pilrhealth.com")
 # options(pilr_project_default = "n2_test_project")
 # options(pilr_default_access_code = "bf62c048-0f14-4e7f-a24c-8516ffd5a14c")
 # participant = "test_participant_1"
 
-options(pilr_server_default = "http://cloud.pilrhealth.com")
-options(pilr_project_default = "n2_test_project_3")
-options(pilr_default_access_code = "f90a86ee-4196-47be-af2f-fe0b9d4340dd")
-participant = "500-0024v1"
-
 # options(pilr_server_default = "http://cloud.pilrhealth.com")
-# options(pilr_project_default = "500_practiceproject")
-# options(pilr_default_access_code = "f0266314-7580-463c-a92e-8ea1af2e3bba")
+# options(pilr_project_default = "n2_test_project_3")
+# options(pilr_default_access_code = "f90a86ee-4196-47be-af2f-fe0b9d4340dd")
 # participant = "500-0024v1"
+# 
+# # options(pilr_server_default = "http://cloud.pilrhealth.com")
+# # options(pilr_project_default = "500_practiceproject")
+# # options(pilr_default_access_code = "f0266314-7580-463c-a92e-8ea1af2e3bba")
+# # participant = "500-0024v1"
+# 
+# event_server = "http://cloud.pilrhealth.com"
+# event_project = "500_practiceproject"
+# event_access_code = "f0266314-7580-463c-a92e-8ea1af2e3bba"
+# event_participant = "500-0024v1"
 
-event_server = "http://cloud.pilrhealth.com"
-event_project = "500_practiceproject"
-event_access_code = "f0266314-7580-463c-a92e-8ea1af2e3bba"
-event_participant = "500-0024v1"
+# event_server = "http://cloud.pilrhealth.com"
+# event_project = "n2_test_project_3"
+# event_access_code = "f90a86ee-4196-47be-af2f-fe0b9d4340dd"
+# event_participant = "500-0024v1"
+
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
-data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema = "1", 
+data <- list(calrq = read_pilr(data_set = "pilrhealth:calrq:calrq_data", schema = "1", value = "all",
                                query_params = list(participant = participant)))
 
 # Set your params (participant variables and instrument settings)
 params = list(settings = read_pilr_params(data_set = "pilrhealth:calrq:calrq_data", schema = "1", instrument = "calrq", participant = participant, period = "active_period", epoch = "epoch_1"))
 
 # Get data for human summary
-# data$event_tags <- list(calrq = read_pilr(data_set = "pilrhealth:time_analysis:tagged_event", schema = "1", 
-#                                           query_params = list(participant = participant)))
-# data$event_tags <- data$event_tags$calrq
-
-data$event_tags <- list(calrq = read_pilr(pilr_server = event_server, project = event_project, data_set = "pilrhealth:time_analysis:tagged_event", schema = "1", access_code = event_access_code ,query_params = list(participant = event_participant)))
+data$event_tags <- list(calrq = read_pilr(data_set = "pilrhealth:time_analysis:tagged_event", schema = "1",
+                                          query_params = list(participant = participant)))
 data$event_tags <- data$event_tags$calrq
+
+# data$event_tags <- list(calrq = read_pilr(pilr_server = event_server, project = event_project, data_set = "pilrhealth:time_analysis:tagged_event", schema = "1", access_code = event_access_code ,query_params = list(participant = event_participant)))
+# data$event_tags <- data$event_tags$calrq
 
 # Add package information to params
 params$package <- "gf.calorimeter.r"

@@ -7,23 +7,36 @@ library(base64enc)
 
 # Set options for server, project, access code
 options(pilr_server_default = "http://qa.pilrhealth.com")
-options(pilr_project_default = "equation_test_6-5-17")
-options(pilr_default_access_code = "52a5d010-61d1-44bc-94fa-40eba6230afe")
-participant = "Infusion3"
+options(pilr_project_default = "workunittest")
+options(pilr_default_access_code = "19cbc77e-6141-4274-8c6d-eb2b4c9ff2f4")
+participant = "1sData"
 
 # Retrieve data (can append more datasets to the list if workunit requires them)
 data <-
   list(calrq = read_pilr(
     data_set = "pilrhealth:calrq:calrq_data",
     schema = "1",
+    value = "all",
     query_params = list(participant = participant)
   ))
 
 # Fix MFC data
-data$calrq$MFCFlow_1 = as.numeric(data$calrq$MFCFlow_1)
-data$calrq$MFCFlow_2 = as.numeric(data$calrq$MFCFlow_2)
-data$calrq$MFCFlow_3 = as.numeric(data$calrq$MFCFlow_3)
-data$calrq$MFCFlow_4 = as.numeric(data$calrq$MFCFlow_4)
+if (!is.null(data$calrq$MFCFlow_1))
+{
+  data$calrq$MFCFlow_1 = as.numeric(data$calrq$MFCFlow_1)
+}
+if (!is.null(data$calrq$MFCFlow_2))
+{
+  data$calrq$MFCFlow_2 = as.numeric(data$calrq$MFCFlow_2)
+}
+if (!is.null(data$calrq$MFCFlow_3))
+{
+  data$calrq$MFCFlow_3 = as.numeric(data$calrq$MFCFlow_3)
+}
+if (!is.null(data$calrq$MFCFlow_4))
+{
+  data$calrq$MFCFlow_4 = as.numeric(data$calrq$MFCFlow_4)
+}
 
 # Set your params (participant variables and instrument settings)
 params = list(
@@ -70,9 +83,16 @@ params$settings$N2_MFC <- params$settings$n2_mfc
 
 pilr.utils.r::get_setting("CO2_MFC", params$settings)
 
+start_time <- Sys.time()
+
 # Run haldane transform
 data$haldane <- apply_haldane(data, params)
 
+end_time <- Sys.time()
+
+end_time - start_time
+
+start_time <- Sys.time()
 # Get data for human summary
 data$event_tags <-
   list(
@@ -89,3 +109,7 @@ data$event_tags <- data$event_tags$calrq
 
 # Run human summary
 ret <- process_cal_infusion(data, params)
+
+end_time <- Sys.time()
+
+end_time - start_time

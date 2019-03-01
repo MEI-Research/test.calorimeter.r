@@ -66,6 +66,11 @@ process_cal_human <- function(data, params, ...) {
       deriv_haldane_old(params)
   }
   
+  # Fix missing cols
+  if (is.null(data$calrq$Activity))
+  {
+    data$calrq$Activity <- NaN
+  }
   
   ## Organize each visit into a list
   visits <- c(tags = c())
