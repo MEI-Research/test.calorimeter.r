@@ -50,8 +50,8 @@ process_cal_human <- function(data, params, ...) {
                                           params$settings)  
   } else {
     # Default for old projects
-    # equation <- "Updated"
-    equation <- "Old"
+    equation <- "Updated"
+    # equation <- "Old"
   }
   
   if (equation == "Updated"){
@@ -171,6 +171,7 @@ process_cal_human <- function(data, params, ...) {
   list(datasets = datasets, files = files)
 }
 
+#'@export
 human_summary <- function(data, params, ...) {
   calrq <- data$haldane
   calrq <- calrq[order(calrq$Time) , ]
@@ -395,9 +396,7 @@ human_summary <- function(data, params, ...) {
       
       ## only want to add this to the Human Study row
       ret$rmr_intercept[ret$tag_label == "HumanStudy"] <- coef(fm1)[1]
-      
-      
-      
+    
       ## add the adjusted rmr intercept
       ## What to return if ei_meas is 0, I suppose Inf, but is that an error?
       sleep <- subset(ret, tag_label == "Sleep")
@@ -589,6 +588,7 @@ human_summary <- function(data, params, ...) {
   ret
 }
 
+#'@export
 compute_human_summary <- function(data, tag_label, settings,
                                   do_tf_correct = TRUE) {
   ##3

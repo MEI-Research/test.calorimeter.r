@@ -2,6 +2,15 @@
 #'@export
 calculate_rmr <- function(data, sampling_seconds) {
 
+    # fix NA activity
+  for (i in 1:length(data$Activity))
+  {
+    if (is.na(data$Activity[i]))
+    {
+      data$Activity[i] <- 0
+    }
+  }
+  
     samples_per_minute <- 60 / sampling_seconds
     minutes <- nrow(data) / samples_per_minute
     
@@ -22,3 +31,4 @@ calculate_rmr <- function(data, sampling_seconds) {
     
     lm(ee ~ activity, data = output15_df)
 }
+

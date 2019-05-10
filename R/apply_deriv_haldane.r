@@ -181,6 +181,9 @@ deriv_haldane <- function(data, params, ...) {
         datetime = as.POSIXct("2012-01-01 01:00:00", format = "%Y-%m-%d %H:%M:%S"),
         value = n2_val
       )
+  } else
+  {
+    n2_df <- -1
   }
     
   # Convert from 24h to minutely
@@ -235,7 +238,10 @@ calc_push <- function(data, volume, cal_seconds, n2_df) {
   }
   
   ## Add nitrogen column; datetime is start datetime for each collection
-  if (!length(n2_df)) {
+  if (n2_df == -1){
+    data$nitrogen <- 0
+    }
+    else if (!length(n2_df)) {
     stop("N2 Values not set in participant variables")
   }
   else {
