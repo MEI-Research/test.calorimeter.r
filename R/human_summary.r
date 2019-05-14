@@ -4,7 +4,6 @@
 process_cal_human <- function(data, params, ...) { 
   ## some notes on syntax with this function.
   ## some of these intermediate functions might return things of interest?
-  stop('Testing if versioning is updating')
   ## even if data comes in with event_tags as an element, we could
   ## bind 'event_tags' to a local variable in this function, and then
   ## parameterize the functions with a event tag variable.
