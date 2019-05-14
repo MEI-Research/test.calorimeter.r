@@ -20,6 +20,8 @@ apply_haldane <- function(data, params, ...) {
     haldane$haldane$Activity <- data$calrq$Activity
     haldane$haldane$Activity_Rate <-
       data$calrq$Activity / cal_seconds
+  } else {
+    haldane$haldane$Activity <- integer(length(calrq))
   }
   
   # try only saving cols we need
