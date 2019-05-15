@@ -1,9 +1,9 @@
 ## calculate RMR intercept
 #'@export
 calculate_rmr <- function(data, sampling_seconds) {
-  stop(data$Activity)
+  
     # fix NA activity
-  for (i in 1:length(data$Activity))
+  for (i in 1:length(data))
   {
     if (is.null(data$Activity[i])) {
       data$Activity[i] <- 0
