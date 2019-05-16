@@ -26,6 +26,8 @@ process_cal_infusion <- function(data, params, ...) {
         apply_slope_offset(params) %>%
             deriv_haldane(params)
 
+    stop(ret$Time)
+    
     infusion <- ret %>% infusion_summary(params)
 
     ## add metadata to infusion data.frame for return data, how are we
@@ -81,7 +83,6 @@ process_cal_infusion <- function(data, params, ...) {
 infusion_summary <- function(data, params, ...) {
   
     calrq <- data$haldane
-    stop(calrq$Time)
     calrq <- calrq[order(calrq$Time), ]
 
     settings <- params$settings
