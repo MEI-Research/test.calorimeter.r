@@ -26,7 +26,7 @@ process_cal_infusion <- function(data, params, ...) {
         apply_slope_offset(params) %>%
             deriv_haldane(params)
 
-    stop(ret$Time)
+    stop(ret$haldane$Time)
     
     infusion <- ret %>% infusion_summary(params)
 
