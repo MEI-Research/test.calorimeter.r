@@ -17,6 +17,10 @@ process_cal_infusion <- function(data, params, ...) {
     if(!length(data$event_tags)) {
         stop("No event tags dataset was received.")
     }
+  ## verify that we have a Infusion Study 
+  if(!any(grepl("Infusion Study", data$event_tags$tags))) {
+    stop("Use the event tag editor to tag a 'Infusion Study' event.")
+  }
     
     ret <- data %>% apply_null_offset(params) %>%
         apply_slope_offset(params) %>%
@@ -75,11 +79,6 @@ process_cal_infusion <- function(data, params, ...) {
 }
 
 infusion_summary <- function(data, params, ...) {
-  
-  ## verify that we have a Infusion Study 
-  if(!any(grepl("Infusion Study", data$event_tags$tags))) {
-    stop("Use the event tag editor to tag a 'Infusion Study' event.")
-  }
   
     calrq <- data$haldane
     calrq <- calrq[order(calrq$Time), ]
