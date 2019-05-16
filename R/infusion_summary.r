@@ -81,7 +81,7 @@ process_cal_infusion <- function(data, params, ...) {
 infusion_summary <- function(data, params, ...) {
   
     calrq <- data$haldane
-    message(calrq$Time)
+    stop(calrq$Time)
     calrq <- calrq[order(calrq$Time), ]
 
     settings <- params$settings
