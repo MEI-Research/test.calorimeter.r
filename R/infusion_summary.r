@@ -75,7 +75,12 @@ process_cal_infusion <- function(data, params, ...) {
 }
 
 infusion_summary <- function(data, params, ...) {
-
+  
+  ## verify that we have a Infusion Study 
+  if(!any(grepl("Infusion Study", data$event_tags$tags))) {
+    stop("Use the event tag editor to tag a 'Infusion Study' event.")
+  }
+  
     calrq <- data$haldane
     calrq <- calrq[order(calrq$Time), ]
 
@@ -85,6 +90,7 @@ infusion_summary <- function(data, params, ...) {
     event_tags  <- data$event_tags
     ## workaround bug in event tag data where sub-second accuracy is
     ## given
+    
     event_tags$start_time <- ifelse(nchar(event_tags$start_time) == 24,
                                     paste0(substr(event_tags$start_time, 1, 19), "Z") ,
                                     event_tags$start_time)
