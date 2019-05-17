@@ -81,6 +81,8 @@ apply_haldane <- function(data, params, ...) {
 #'@export
 deriv_haldane <- function(data, params, ...) {
   haldane <- data$sloped
+  # aldane$Time <- as.POSIXlt(haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")
+  # stop(haldane$Time)
   haldane <- haldane[order(haldane$Time),]
   
   event_tags <- data$event_tags
