@@ -72,16 +72,15 @@ process_cal_infusion <- function(data, params, ...) {
       
       # Run infusion summary and merge each visit result
       if (i == 1) {
-        human <- ret_sub %>% infusion_summary(params)
+        infusion <- ret_sub %>% infusion_summary(params)
       }
       else {
-        human <- rbind(human, ret_sub %>% infusion_summary(params))
+        infusion <- rbind(human, ret_sub %>% infusion_summary(params))
       }
     }
     
     # infusion <- ret %>% infusion_summary(params)
 
-    stop("test")
     ## add metadata to infusion data.frame for return data, how are we
     ## going to do this in general?
     
