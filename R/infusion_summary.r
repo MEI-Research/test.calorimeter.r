@@ -1,11 +1,9 @@
 ## this is our entry point from opencpu
 #'@export
-#'
-# calrq <- calrq$datasets$haldane 
-# data <- data$calrq
-
 process_cal_infusion <- function(data, params, ...) {
-
+    
+    message('Starting infusion summary job')
+  
     if(missing(params)) {
         params <- list()
     }
@@ -17,10 +15,10 @@ process_cal_infusion <- function(data, params, ...) {
     if(!length(data$event_tags)) {
         stop("No event tags dataset was received.")
     }
-  ## verify that we have a Infusion Study 
-  if(!any(grepl("Infusion Study", data$event_tags$tags))) {
+    ## verify that we have a Infusion Study 
+    if(!any(grepl("Infusion Study", data$event_tags$tags))) {
     stop("Use the event tag editor to tag a 'Infusion Study' event.")
-  }
+    }
     
     ret <- data %>% apply_null_offset(params) %>%
         apply_slope_offset(params) %>%

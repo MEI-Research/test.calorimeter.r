@@ -2,21 +2,7 @@
 #'@export
 #'@import jsonlite dplyr ggvis uuid
 process_cal_human <- function(data, params, ...) { 
-  ## some notes on syntax with this function.
-  ## some of these intermediate functions might return things of interest?
-  ## even if data comes in with event_tags as an element, we could
-  ## bind 'event_tags' to a local variable in this function, and then
-  ## parameterize the functions with a event tag variable.
-  
-  ## but then, what if we for some reason want to call these
-  ## directly. we'd want the public interface then.
-  
-  ## must each of these return event_tags in its list though? seems
-  ## clunky.
-  
-  ## what do we need to currently fake to get this working from pilr?
-  ## settings
-  
+
   message('Starting human summary job')
   
   event_tags  <- data$event_tags
