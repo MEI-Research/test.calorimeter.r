@@ -36,7 +36,50 @@ process_cal_infusion <- function(data, params, ...) {
         apply_slope_offset(params) %>%
             deriv_haldane(params)
     
-    infusion <- ret %>% infusion_summary(params)
+    ## Organize each visit into a list
+    visits <- c(tags = c())
+    visitIndex <- which(event_tags$tags %in% "Infusion Study")
+    for (i in 1:length(visitIndex)) {
+      if (i == length(visitIndex)) {
+        visits[i] <- list(tags = event_tags$tags[visitIndex[i]:length(event_tags$tags)])
+      }
+      else {
+        visits[i] <- list(tags = event_tags$tags[visitIndex[i]:visitIndex[i+1]-1])
+      }
+    }
+    
+    # For each visit
+    for (i in 1:length(visits)) {
+      ret_sub <- c()
+      ret$haldane$timestamp <- as.POSIXct(ret$haldane$timestamp, format = "%Y-%m-%dT%H:%M:%SZ")
+      
+      # Find first and last data within visit
+      if (i == length(visits)) {
+        startTime <- as.POSIXct(event_tags$start_time[visitIndex[i]], format = "%Y-%m-%dT%H:%M:%SZ")
+        endTime <- as.POSIXct(event_tags$end_time[visitIndex[i]], format = "%Y-%m-%dT%H:%M:%SZ")
+      }
+      else {
+        startTime <- as.POSIXct(event_tags$start_time[visitIndex[i]], format = "%Y-%m-%dT%H:%M:%SZ")
+        endTime <- as.POSIXct(event_tags$end_time[visitIndex[i]], format = "%Y-%m-%dT%H:%M:%SZ")
+      }
+      
+      event_tags$start_time_formatted <- as.POSIXct(event_tags$start_time, format = "%Y-%m-%dT%H:%M:%SZ")
+      event_tags$end_time_formatted <- as.POSIXct(event_tags$end_time, format = "%Y-%m-%dT%H:%M:%SZ")
+      
+      # Get data within visit
+      ret_sub$haldane <- subset(ret$haldane, (ret$haldane$timestamp >= startTime & ret$haldane$timestamp <= endTime))
+      ret_sub$event_tags <- subset(event_tags, (event_tags$start_time_formatted >= startTime & event_tags$end_time_formatted <= endTime))
+      
+      # Run infusion summary and merge each visit result
+      if (i == 1) {
+        human <- ret_sub %>% infusion_summary(params)
+      }
+      else {
+        human <- rbind(human, ret_sub %>% infusion_summary(params))
+      }
+    }
+    
+    # infusion <- ret %>% infusion_summary(params)
 
     stop("test")
     ## add metadata to infusion data.frame for return data, how are we
@@ -80,7 +123,7 @@ process_cal_infusion <- function(data, params, ...) {
 infusion_summary <- function(data, params, ...) {
   
     calrq <- data$haldane
-    calrq <- calrq[order(calrq$Time), ]
+    calrq <- calrq[order(calrq$Time) , ]
 
     settings <- params$settings
 
