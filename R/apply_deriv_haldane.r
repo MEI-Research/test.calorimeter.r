@@ -240,6 +240,8 @@ deriv_haldane <- function(data, params, ...) {
           datetime = as.POSIXct("2012-01-01 01:00:00", format = "%Y-%m-%d %H:%M:%S"),
           value = n2_val
         )
+    } else {
+      n2_df <- -1
     }} else
     {
       n2_df <- -1
