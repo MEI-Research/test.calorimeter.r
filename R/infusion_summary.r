@@ -22,6 +22,8 @@ process_cal_infusion <- function(data, params, ...) {
     
   ## workaround bug in event tag data where sub-second accuracy is
   ## given
+  event_tags  <- data$event_tags
+  
   data$event_tags$start_time <- ifelse(nchar(event_tags$start_time) == 24,
                                        paste0(substr(event_tags$start_time, 1, 19), "Z") ,
                                        event_tags$start_time)
@@ -50,9 +52,6 @@ process_cal_infusion <- function(data, params, ...) {
       # system(paste0("uuid", " -v4", " -n", nrow(ret$haldane)),
       #                       intern = TRUE)
     ret$haldane$timestamp <- format(ret$haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")
-
-    ## event_tags data comes in as YYYY-MM-DDTHH:MM:SSZ
-    event_tags  <- data$event_tags
 
 
     rep_data <- list(infusion = infusion, haldane = ret$haldane,
