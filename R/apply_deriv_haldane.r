@@ -240,7 +240,7 @@ deriv_haldane <- function(data, params, ...) {
           datetime = as.POSIXct("2012-01-01 01:00:00", format = "%Y-%m-%d %H:%M:%S"),
           value = n2_val
         )
-    } else
+    }} else
     {
       n2_df <- -1
     }
@@ -260,7 +260,7 @@ deriv_haldane <- function(data, params, ...) {
     
     list(haldane = ret, event_tags = event_tags)
   }
-}
+
 
 #'@export
 derivative <- function(x,
