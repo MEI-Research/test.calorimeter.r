@@ -83,7 +83,7 @@ deriv_haldane <- function(data, params, ...) {
   haldane <- data$sloped
   # aldane$Time <- as.POSIXlt(haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")
   # stop(haldane$Time)
-  haldane <- haldane[order(haldane$Time),]
+  haldane <- haldane[order(haldane$Time), ]
   
   event_tags <- data$event_tags
   
@@ -242,26 +242,26 @@ deriv_haldane <- function(data, params, ...) {
         )
     } else {
       n2_df <- -1
-    }} else
-    {
-      n2_df <- -1
     }
-    
-    # Convert from 24h to minutely
-    # n2_df$value <- n2_df$value / (60*24)
-    
-    if (grepl("push", config, ignore.case = TRUE)) {
-      message("using config: push")
-      ret <-
-        calc_push(haldane, cal_volume, cal_seconds, n2_df = n2_df)
-    } else {
-      message("using config: pull")
-      ret <-
-        calc_pull(haldane, cal_volume, cal_seconds, n2_df = n2_df)
-    }
-    
-    list(haldane = ret, event_tags = event_tags)
+  } else {
+    n2_df <- -1
   }
+  
+  # Convert from 24h to minutely
+  # n2_df$value <- n2_df$value / (60*24)
+  
+  if (grepl("push", config, ignore.case = TRUE)) {
+    message("using config: push")
+    ret <-
+      calc_push(haldane, cal_volume, cal_seconds, n2_df = n2_df)
+  } else {
+    message("using config: pull")
+    ret <-
+      calc_pull(haldane, cal_volume, cal_seconds, n2_df = n2_df)
+  }
+  
+  list(haldane = ret, event_tags = event_tags)
+}
 
 
 #'@export
