@@ -20,12 +20,23 @@ process_cal_infusion <- function(data, params, ...) {
     stop("Use the event tag editor to tag a 'Infusion Study' event.")
     }
     
+  ## workaround bug in event tag data where sub-second accuracy is
+  ## given
+  data$event_tags$start_time <- ifelse(nchar(event_tags$start_time) == 24,
+                                       paste0(substr(event_tags$start_time, 1, 19), "Z") ,
+                                       event_tags$start_time)
+  
+  data$event_tags$end_time <- ifelse(nchar(event_tags$end_time) == 24,
+                                     paste0(substr(event_tags$end_time, 1, 19), "Z") ,
+                                     event_tags$end_time)
+    
     ret <- data %>% apply_null_offset(params) %>%
         apply_slope_offset(params) %>%
             deriv_haldane(params)
     
     infusion <- ret %>% infusion_summary(params)
 
+    stop("test")
     ## add metadata to infusion data.frame for return data, how are we
     ## going to do this in general?
     
@@ -40,18 +51,9 @@ process_cal_infusion <- function(data, params, ...) {
       #                       intern = TRUE)
     ret$haldane$timestamp <- format(ret$haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")
 
-    ## workaround bug in event tag data where sub-second accuracy is
-    ## given
     ## event_tags data comes in as YYYY-MM-DDTHH:MM:SSZ
     event_tags  <- data$event_tags
 
-    event_tags$start_time <- ifelse(nchar(event_tags$start_time) == 24,
-                                    paste0(substr(event_tags$start_time, 1, 19), "Z") ,
-                                    event_tags$start_time)
-
-    event_tags$end_time <- ifelse(nchar(event_tags$end_time) == 24,
-                                    paste0(substr(event_tags$end_time, 1, 19), "Z") ,
-                                    event_tags$end_time)
 
     rep_data <- list(infusion = infusion, haldane = ret$haldane,
                      event_tags = event_tags)
