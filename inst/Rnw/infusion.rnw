@@ -11,8 +11,8 @@
 \begin{document}
 
 <<setup, include=FALSE, cache=FALSE>>=
-library(xtable)
-library(plyr) 
+# library(xtable)
+# library(plyr) 
 
 infusion <- data$infusion
 infusion$date <- as.POSIXct(as.character(infusion$start_time))
