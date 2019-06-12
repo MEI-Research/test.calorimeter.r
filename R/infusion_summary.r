@@ -1,5 +1,6 @@
 ## this is our entry point from opencpu
 #'@export
+#'@import plyr xtable
 process_cal_infusion <- function(data, params, ...) {
     
     message('Starting infusion summary job')
