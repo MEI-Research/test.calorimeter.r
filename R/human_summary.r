@@ -268,7 +268,7 @@ human_summary <- function(data, params, ...) {
     }
   } else {
     # Create value for check later
-    rest_df <- 0
+    rest_df <- nrow(data.frame(0))
   }
   # rest_df <- data.frame(1)
   # rest_df$post_meal <- 360
