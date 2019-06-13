@@ -266,6 +266,9 @@ human_summary <- function(data, params, ...) {
       rest_df <- rbind(rest_df, data.frame(post_meal = temp$value[[1]],
                                            rest = temp$value[[2]]))
     }
+  } else {
+    # Create value for check later
+    rest_df <- 0
   }
   # rest_df <- data.frame(1)
   # rest_df$post_meal <- 360
