@@ -1,6 +1,10 @@
 ## this is our entry point from pilr on file upload
 #'@export
 apply_haldane <- function(data, params, ...) {
+  if (length(data$calrq) == 0)
+  {
+    stop("No data sent, check tags and period!")
+  }
   haldane <- apply_null_offset(data, params) %>%
     apply_slope_offset(params) %>%
     deriv_haldane(params)
