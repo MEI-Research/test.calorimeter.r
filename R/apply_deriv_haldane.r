@@ -1,7 +1,7 @@
 ## this is our entry point from pilr on file upload
 #'@export
 apply_haldane <- function(data, params, ...) {
-  if (!(length(data$calrq) > 0))
+  if (length(data$calrq$Time) == 0)
   {
     stop("No data sent, check tags and period!")
   }
