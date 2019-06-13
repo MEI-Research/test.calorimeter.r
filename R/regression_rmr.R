@@ -3,7 +3,7 @@
 calculate_rmr <- function(data, sampling_seconds) {
   
     # fix NA activity
-  for (i in 1:length(data))
+  for (i in 1:(length(data$Activity)))
   {
     if (is.null(data$Activity[i])) {
       data$Activity[i] <- 0
