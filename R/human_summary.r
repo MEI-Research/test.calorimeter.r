@@ -30,6 +30,10 @@ process_cal_human <- function(data, params, ...) {
     stop("No event tags dataset was received. Are event tags set for this participant?")
   }
   
+  if(!length(data$calrq$Time)) {
+    stop("No data sent, check tags and period!")
+  }
+  
   if (pilr.utils.r::has_setting("equation",params$settings)) {
     equation <- pilr.utils.r::get_setting("equation",
                                           params$settings)  

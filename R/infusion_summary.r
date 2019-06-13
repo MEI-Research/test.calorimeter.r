@@ -16,6 +16,11 @@ process_cal_infusion <- function(data, params, ...) {
     if(!length(data$event_tags)) {
         stop("No event tags dataset was received.")
     }
+  
+  if(!length(data$calrq$Time)) {
+    stop("No data sent, check tags and period!")
+  }
+  
     ## verify that we have a Infusion Study 
     if(!any(grepl("Infusion Study", data$event_tags$tags))) {
     stop("Use the event tag editor to tag a 'Infusion Study' event.")
