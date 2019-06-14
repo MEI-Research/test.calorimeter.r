@@ -58,7 +58,7 @@ process_cal_human <- function(data, params, ...) {
   # Fix missing cols
   if (is.null(data$calrq$Activity))
   {
-    data$calrq$Activity <- NaN
+    data$calrq$Activity <- integer(length(data$calrq$Time))
   }
   
   ## Organize each visit into a list
