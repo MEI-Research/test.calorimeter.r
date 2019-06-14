@@ -7,12 +7,10 @@ calculate_rmr <- function(data, sampling_seconds) {
   {
     if (is.null(data$Activity[i])) {
       data$Activity[i] <- 0
-    } else {
-      stop(data$Activity,i)
+    } else if (is.na(data$Activity[i])) {
+      stop(data$Activity,"iteration",i)
+      data$Activity[i] <- 0
     }
-    #else if (is.na(data$Activity[i])) {
-    #  data$Activity[i] <- 0
-    #}
   }
   
     samples_per_minute <- 60 / sampling_seconds
