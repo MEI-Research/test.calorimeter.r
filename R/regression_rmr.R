@@ -1,14 +1,14 @@
 ## calculate RMR intercept
 #'@export
 calculate_rmr <- function(data, sampling_seconds) {
-  stop("length: ",length(data$Activity))
+  #stop("length: ",length(data$Activity))
     # fix NA activity
-  for (i in 1:(length(data$Activity)))
+  for (i in 1:(length(data$recalc_ee)))
   {
     if (is.null(data$Activity[i])) {
       data$Activity[i] <- 0
     } else if (is.na(data$Activity[i])) {
-      stop(data$Activity,"iteration",i)
+      #stop(data$Activity,"iteration",i)
       data$Activity[i] <- 0
     }
   }
