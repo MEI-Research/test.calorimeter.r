@@ -8,7 +8,7 @@ calculate_rmr <- function(data, sampling_seconds) {
     if (is.null(data$Activity[i])) {
       data$Activity[i] <- 0
     } else {
-      stop(data$Activity)
+      stop(data$Activity,i)
     }
     #else if (is.na(data$Activity[i])) {
     #  data$Activity[i] <- 0
