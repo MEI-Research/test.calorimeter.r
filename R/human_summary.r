@@ -43,14 +43,13 @@ process_cal_human <- function(data, params, ...) {
     # equation <- "Old"
   }
   
-  if (equation == "Updated"){
+  if (equation == "Updated" || equation == "[Updated]"){
     message("Using updated equations")
     ret <- data %>% apply_null_offset(params) %>%
       apply_slope_offset(params) %>%
       deriv_haldane(params)
   } else {
     message("Using old equations")
-    stop(equation)
     ret <- data %>% apply_null_offset(params) %>%
       apply_slope_offset(params) %>%
       deriv_haldane_old(params)
