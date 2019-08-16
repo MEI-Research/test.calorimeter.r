@@ -50,6 +50,7 @@ process_cal_human <- function(data, params, ...) {
       deriv_haldane(params)
   } else {
     message("Using old equations")
+    stop(equation)
     ret <- data %>% apply_null_offset(params) %>%
       apply_slope_offset(params) %>%
       deriv_haldane_old(params)
