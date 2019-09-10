@@ -71,7 +71,11 @@ apply_haldane <- function(data, params, ...) {
       "cho_ox",
       "fat_ox",
       "Activity",
-      "Activity_Rate"
+      "Activity_Rate",
+      "TreadmillRate",
+      "TreadmillIncline",
+      "BikeWorkload",
+      "BikeSpeed"
     )
   
   # Save output datasets and files in list
