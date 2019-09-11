@@ -659,6 +659,14 @@ compute_human_summary <- function(data, tag_label, settings,
   
   ret$mr <- mean(data$adj_ee, na.rm = TRUE)
   
+  ret$TreadmillRate <- mean(data$TreadmillRate, na.rm = TRUE)
+  
+  ret$TreadmillIncline <- mean(data$TreadmillIncline, na.rm = TRUE)
+  
+  ret$BikeWorkload <- mean(data$BikeWorkload, na.rm = TRUE)
+  
+  ret$BikeSpeed <- mean(data$BikeSpeed, na.rm = TRUE)
+  
   ## do this after calculating the above
   ret$rq <- ret$vco2 / ret$vo2
   
