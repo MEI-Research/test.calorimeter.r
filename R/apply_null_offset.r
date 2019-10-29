@@ -18,9 +18,9 @@ apply_null_offset <- function(data, params, ...)
             ino2_setting <- pilr.utils.r::get_setting("in_o2", settings) %>%
                 pilr.utils.r::safe_numeric()
             calrq$InflowO2 <- ino2_setting
-        } else {
-            stop("O2-In Constant setting required.")
-        }
+        }  # else {
+           # stop("O2-In Constant setting required.")
+      #  }
     }
     
     ## InCO2 setting
@@ -30,9 +30,9 @@ apply_null_offset <- function(data, params, ...)
             inco2 <- pilr.utils.r::get_setting("in_co2", settings) %>%
                 pilr.utils.r::safe_numeric()
             calrq$InflowCO2 <- inco2
-        } else {
-            stop("CO2-In Constant setting required.")
-        }
+        } # else {
+          #  stop("CO2-In Constant setting required.")
+       # }
     }
 
     if(length(event_tags)) {
