@@ -147,7 +147,9 @@ deriv_haldane <- function(data, params, ...) {
   )
   
   haldane$dco2 <- derivative(haldane$nulled_outflow_co2,
-                             data_interval = cal_seconds)
+                             data_interval = cal_seconds,
+                            derivative_window = deriv_window
+                            )
   
   haldane$dn2 = -haldane$do2 - haldane$dco2
   
