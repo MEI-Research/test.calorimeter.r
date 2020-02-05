@@ -282,15 +282,16 @@ derivative <- function(x,
   # Calculate derivative using linear interpolation
   # Initialize
   dVector <- rep(0, length(x))
+  derivative_window_parsed = derivative_window * data_interval
   for (i in 1:length(x)) {
     # Set d/dt to zero if there are not enough points
-    if (i > derivative_window / 2 &
-        i < length(x) - (derivative_window / 2) & !all(is.na(x)))
+    if (i > derivative_window_parsed / 2 &
+        i < length(x) - (derivative_window_parsed / 2) & !all(is.na(x)))
     {
       # Make fit array
       fitdata <-
-        list(data = x[(i - derivative_window / 2):(i + derivative_window / 2)],
-             time = (1:(derivative_window + 1)) * (data_interval / 60))
+        list(data = x[(i - derivative_window_parsed / 2):(i + derivative_window_parsed / 2)],
+             time = (1:(derivative_window_parsed + 1)) * (data_interval / 60))
       # Calculate fit
       dVector[i] = lm(formula = data ~ time, fitdata, na.action = na.exclude)$coefficients[2]
     } else
