@@ -127,11 +127,11 @@ deriv_haldane <- function(data, params, ...) {
                                           params$settings) %>%
     pilr.utils.r::safe_numeric()
   
-  cal_diff <- unique(diff(as.POSIXlt(haldane$time, format = "%Y-%m-%dT%H:%M:%SZ")))
+  cal_diffarr <- diff(as.POSIXlt(haldane$time, format = "%Y-%m-%dT%H:%M:%SZ"))
   #cal_diff <- unique(diff(as.POSIXlt(data$haldane$datasets$haldane$time, format = "%Y-%m-%dT%H:%M:%SZ")))
   
   cal_seconds <-
-    min(cal_diff[cal_diff > 0])
+    median(cal_diffarr[cal_diffarr > 0])
   # units(cal_seconds) <- "secs"
   cal_seconds <- as.numeric(cal_seconds)
   
