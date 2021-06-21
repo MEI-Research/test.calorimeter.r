@@ -132,7 +132,7 @@ deriv_haldane <- function(data, params, ...) {
   
   cal_seconds <-
     median(cal_diffarr[cal_diffarr > 0])
-  # units(cal_seconds) <- "secs"
+  units(cal_seconds) <- "secs"
   cal_seconds <- as.numeric(cal_seconds)
   
   deriv_window <-
