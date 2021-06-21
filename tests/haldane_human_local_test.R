@@ -9,10 +9,10 @@ library(base64enc)
 # Clear old values
 remove(params)
 
-options(pilr_server_default = "http://qa.pilrhealth.com")
-options(pilr_project_default = "workunittest")
-options(pilr_default_access_code = "19cbc77e-6141-4274-8c6d-eb2b4c9ff2f4")
-participant = "1sData"
+options(pilr_server_default = "http://cloud.pilrhealth.com")
+options(pilr_project_default = "test_lrc_bundle")
+options(pilr_default_access_code = "bcb22b88-70ed-48dc-ac48-de91f2a29eed")
+participant = "test5"
 
 # Set options for server, project, access code
 # options(pilr_server_default = "http://cloud.pilrhealth.com")
@@ -57,40 +57,40 @@ data$event_tags <- data$event_tags$calrq
 # data$event_tags <- data$event_tags$calrq
 
 # Add package information to params
-params$package <- "gf.calorimeter.r"
+params$package <- "test.calorimeter.r"
 
-# Fix multiple N2 array
-testlist <- eval(parse("", n=NULL, gsub('\n', "", params$settings$multiple_n2$value, fixed = TRUE)))
-fields = list()
-for (i in 1:length(testlist$fields))
-{
-  fields[i] = list(as.data.frame(testlist$fields[[i]])) 
-  fields[[i]]$value = list(as.numeric(testlist$fields[[i]]$value[1]),list('$date' = testlist$fields[[i]]$value[2]),testlist$fields[[i]]$value[3])
-  print(i)
-}
-end
+# # Fix multiple N2 array
+# testlist <- eval(parse("", n=NULL, gsub('\n', "", params$settings$multiple_n2$value, fixed = TRUE)))
+# fields = list()
+# for (i in 1:length(testlist$fields))
+# {
+#   fields[i] = list(as.data.frame(testlist$fields[[i]])) 
+#   fields[[i]]$value = list(as.numeric(testlist$fields[[i]]$value[1]),list('$date' = testlist$fields[[i]]$value[2]),testlist$fields[[i]]$value[3])
+#   print(i)
+# }
+# end
+# 
+# test = data.frame(matrix(1,length(fields)))
+# test$fields = fields
+# test <- subset(test, select = -1)
+# params$settings$multiple_n2$value <- toJSON(test)
 
-test = data.frame(matrix(1,length(fields)))
-test$fields = fields
-test <- subset(test, select = -1)
-params$settings$multiple_n2$value <- toJSON(test)
-
-# Fix rest duration
-testlist <- eval(parse("", n=NULL, gsub('\n', "", params$settings$rest_durations$value, fixed = TRUE)))
-fields = list()
-for (i in 1:length(testlist$fields))
-{
-  fields[i] = list(as.data.frame(testlist$fields[[i]]))
-  fields[[i]]$value[1] = list(as.numeric(testlist$fields[[i]]$value[1]))
-  fields[[i]]$value[2] = list(as.numeric(testlist$fields[[i]]$value[2]))
-  print(i)
-}
-end
-
-test = data.frame(matrix(1,1))
-test$fields = fields
-test <- subset(test, select = -1)
-params$settings$rest_durations$value <- toJSON(test)
+# # Fix rest duration
+# testlist <- eval(parse("", n=NULL, gsub('\n', "", params$settings$rest_durations$value, fixed = TRUE)))
+# fields = list()
+# for (i in 1:length(testlist$fields))
+# {
+#   fields[i] = list(as.data.frame(testlist$fields[[i]]))
+#   fields[[i]]$value[1] = list(as.numeric(testlist$fields[[i]]$value[1]))
+#   fields[[i]]$value[2] = list(as.numeric(testlist$fields[[i]]$value[2]))
+#   print(i)
+# }
+# end
+# 
+# test = data.frame(matrix(1,1))
+# test$fields = fields
+# test <- subset(test, select = -1)
+# params$settings$rest_durations$value <- toJSON(test)
 
 # Remap variables with changed names (set in job def JSON)
 params$settings$volume <- params$settings$chamber_volume

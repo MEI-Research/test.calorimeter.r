@@ -127,9 +127,12 @@ deriv_haldane <- function(data, params, ...) {
                                           params$settings) %>%
     pilr.utils.r::safe_numeric()
   
+  cal_diff <- unique(diff(as.POSIXlt(haldane$time, format = "%Y-%m-%dT%H:%M:%SZ")))
+  #cal_diff <- unique(diff(as.POSIXlt(data$haldane$datasets$haldane$time, format = "%Y-%m-%dT%H:%M:%SZ")))
+  
   cal_seconds <-
-    median(diff(as.POSIXlt(haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")))
-  units(cal_seconds) <- "secs"
+    min(cal_diff[cal_diff > 0])
+  # units(cal_seconds) <- "secs"
   cal_seconds <- as.numeric(cal_seconds)
   
   deriv_window <-
@@ -282,7 +285,7 @@ derivative <- function(x,
   # Calculate derivative using linear interpolation
   # Initialize
   dVector <- rep(0, length(x))
-  derivative_window_parsed = derivative_window * data_interval
+  derivative_window_parsed = derivative_window * (60/data_interval)
   for (i in 1:length(x)) {
     # Set d/dt to zero if there are not enough points
     if (i > derivative_window_parsed / 2 &
