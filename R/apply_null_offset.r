@@ -1,7 +1,10 @@
 #'@export
 apply_null_offset <- function(data, params, ...)
 {
-    calrq <- data$calrq
+  # Trim extra uploads
+    trimarr <- min(which(data$calrq$Time == max(data$calrq$Time)))
+    calrq <- data$calrq[1:trimarr, ]
+    message('Trimming Null Data')
     
     event_tags <- data$event_tags
     
