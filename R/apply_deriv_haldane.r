@@ -5,6 +5,10 @@ apply_haldane <- function(data, params, ...) {
   {
     stop("No data sent, check tags and period!")
   }
+  # Trim extra uploads
+  trimarr <- min(which(data$calrq$Time == max(data$calrq$Time)))
+  data$calrq <- data$calrq[1:trimarr, ]
+  
   haldane <- apply_null_offset(data, params) %>%
     apply_slope_offset(params) %>%
     deriv_haldane(params)
