@@ -1,4 +1,5 @@
 ## this is our entry point from pilr on file upload
+# Test comment
 #'@export
 apply_haldane <- function(data, params, ...) {
   if (length(data$calrq$Time) == 0)
