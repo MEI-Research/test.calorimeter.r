@@ -81,7 +81,7 @@ process_cal_infusion <- function(data, params, ...) {
         infusion <- ret_sub %>% infusion_summary(params)
       }
       else {
-        infusion <- rbind(human, ret_sub %>% infusion_summary(params))
+        infusion <- rbind(infusion, ret_sub %>% infusion_summary(params))
       }
     }
     
