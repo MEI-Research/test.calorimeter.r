@@ -6,8 +6,14 @@ apply_haldane <- function(data, params, ...) {
     stop("No data sent, check tags and period!")
   }
   # Trim extra uploads
+  #trimarr <- min(which(unparsed$calrq$Time == max(unparsed$calrq$Time)))
+  #data$calrq <- unparsed$calrq[1:trimarr, ]
+  #data$event_tags <- unparsed$event_tags
+  
+  # Trim extra uploads
   trimarr <- min(which(data$calrq$Time == max(data$calrq$Time)))
   data$calrq <- data$calrq[1:trimarr, ]
+  message('Trimming Data')
   
   haldane <- apply_null_offset(data, params) %>%
     apply_slope_offset(params) %>%
@@ -164,7 +170,7 @@ deriv_haldane <- function(data, params, ...) {
   
   ## Create data frame of N2 values and date_time
   if (pilr.utils.r::has_setting("multiple_n2", params$settings)) {
-    if (!is.na(pilr.utils.r::get_setting("multiple_n2", params$settings)))
+    if (!(length(fromJSON(params$settings$multiple_n2$value)$fields[[1]])==0))
     {
       ## Interpret N2 array variable JSON
       from_json <- fromJSON(params$settings$multiple_n2$value[[1]])

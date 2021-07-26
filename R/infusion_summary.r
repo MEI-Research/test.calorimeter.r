@@ -73,8 +73,10 @@ process_cal_infusion <- function(data, params, ...) {
       event_tags$end_time_formatted <- as.POSIXct(event_tags$end_time, format = "%Y-%m-%dT%H:%M:%SZ")
       
       # Get data within visit
+      message('Subset calc')
       ret_sub$haldane <- subset(ret$haldane, (ret$haldane$timestamp >= startTime & ret$haldane$timestamp <= endTime))
       ret_sub$event_tags <- subset(event_tags, (event_tags$start_time_formatted >= startTime & event_tags$end_time_formatted <= endTime))
+      message('Post Subset')
       
       # Run infusion summary and merge each visit result
       if (i == 1) {
@@ -174,8 +176,6 @@ infusion_summary <- function(data, params, ...) {
 }
 
 compute_infusion_summary <- function(data, tag_label, settings, ...) {
-    vo2_exp <- 3.941
-    vco2_exp <- 1.104
     
     vo2_constant <- 3.941
     vco2_constant <- 1.104
@@ -231,11 +231,11 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
         message("using config: push, using expected: corrected derivative")
         
         # Push Method
-        VO2_exp <- mean((data$InflowRate * data$nulled_inflow_o2 * mfc$N2)/(mfc$N2 * 100 + data$InflowRate * data$nulled_inflow_n2)) * 1000
-        VCO2_exp <- mean((data$InflowRate * (data$nulled_inflow_co2 * mfc$N2 - mfc$CO2 * data$nulled_inflow_n2)) / (-mfc$N2 * 100 - data$InflowRate * data$nulled_inflow_n2)) * 1000
+        VO2_exp <- ((data$InflowRate * data$nulled_inflow_o2 * mfc$N2)/(mfc$N2 * 100 + data$InflowRate * data$nulled_inflow_n2)) * 1000
+        VCO2_exp <- ((data$InflowRate * (data$nulled_inflow_co2 * mfc$N2 - mfc$CO2 * data$nulled_inflow_n2)) / (-mfc$N2 * 100 - data$InflowRate * data$nulled_inflow_n2)) * 1000
         
         # Derivative correction
-        d_corr = (data$InflowRate - VO2_exp + VCO2_exp) / (data$InflowRate + mfc$N2 + mfc$CO2)
+        d_corr <- (data$InflowRate - VO2_exp/1000 + VCO2_exp/1000) / (data$InflowRate + mfc$N2 + mfc$CO2)
         
         # Recalc VO2 VCO2
         data$haldane_outflow <- ( data$InflowRate * (data$nulled_inflow_n2/100) - (data$dn2/100) * volume * d_corr) / (data$nulled_outflow_n2/100)
@@ -271,8 +271,8 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
         OutflowRate = data$InflowRate + mfc$N2 + mfc$CO2
         
         # Pull Method
-        VO2_exp <- mean((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_n2) * 1000
-        VCO2_exp <- mean((mfc$CO2 * data$nulled_inflow_n2 - mfc$N2 * data$nulled_inflow_co2) / data$nulled_inflow_n2) * 1000
+        VO2_exp <- ((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_n2) * 1000
+        VCO2_exp <- ((mfc$CO2 * data$nulled_inflow_n2 - mfc$N2 * data$nulled_inflow_co2) / data$nulled_inflow_n2) * 1000
         
         # Recalc VO2 VCO2
         data$haldane_inflow <- ( OutflowRate * (data$nulled_outflow_n2/100) + (data$dn2/100) * volume) / (data$nulled_inflow_n2/100)
@@ -305,8 +305,8 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
         message("using config: pull, using expected: pull normal")
         
         # Pull Method
-        VO2_exp <- mean((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_n2) * 1000
-        VCO2_exp <- mean((mfc$CO2 * data$nulled_inflow_n2 - mfc$N2 * data$nulled_inflow_co2) / data$nulled_inflow_n2) * 1000
+        VO2_exp <- ((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_n2) * 1000
+        VCO2_exp <- ((mfc$CO2 * data$nulled_inflow_n2 - mfc$N2 * data$nulled_inflow_co2) / data$nulled_inflow_n2) * 1000
         
         # Recalc VO2 VCO2
         data$haldane_inflow <- ( data$OutflowRate * (data$nulled_outflow_n2/100) + (data$dn2/100) * volume) / (data$nulled_inflow_n2/100)
@@ -338,8 +338,8 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
       message("using approximate equations, please update settings")
       # Use old eqns
       # Expected values
-      VO2_exp <- (mean( data$nulled_inflow_o2 * (mfc$CO2 + mfc$N2)) / 100) * 1000
-      VCO2_exp <- mean(mfc$CO2) * 1000
+      VO2_exp <- (( data$nulled_inflow_o2 * (mfc$CO2 + mfc$N2)) / 100) * 1000
+      VCO2_exp <- (mfc$CO2) * 1000
     }
     
     EE_exp <- (vo2_exp * VO2_exp + vco2_exp * VCO2_exp)
