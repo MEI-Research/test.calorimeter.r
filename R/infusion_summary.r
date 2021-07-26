@@ -176,7 +176,9 @@ infusion_summary <- function(data, params, ...) {
 }
 
 compute_infusion_summary <- function(data, tag_label, settings, ...) {
-    
+    vo2_exp <- 3.941
+    vco2_exp <- 1.104
+  
     vo2_constant <- 3.941
     vco2_constant <- 1.104
     nitrogen_constant <- -2.17
