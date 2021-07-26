@@ -352,11 +352,15 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
         VCO2_meas <- mean(data$recalc_vco2) * 1000
         EE_meas <- mean(data$recalc_ee) * 1000
         RQ_meas <- mean(data$recalc_rq)
+        VO2_exp <- mean(VO2_exp)
+        VCO2_exp <- mean(VCO2_exp)
     } else {
         VO2_meas <- mean(data$recalc_vo2_0vol) * 1000
         VCO2_meas <- mean(data$recalc_vco2_0vol) * 1000
         EE_meas <- mean(data$recalc_ee_0vol) * 1000
         RQ_meas <- mean(data$recalc_rq_0vol)
+        VO2_exp <- mean(VO2_exp)
+        VCO2_exp <- mean(VCO2_exp)
     }
   
     VO2_err <- (VO2_meas - VO2_exp) / VO2_exp * 100
