@@ -343,9 +343,6 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
       VO2_exp <- (( data$nulled_inflow_o2 * (mfc$CO2 + mfc$N2)) / 100) * 1000
       VCO2_exp <- (mfc$CO2) * 1000
     }
-    
-    EE_exp <- (vo2_exp * VO2_exp + vco2_exp * VCO2_exp)
-    RQ_exp <- VCO2_exp / VO2_exp
 
     if(!grepl("ShortCircuit", tag_label)) {
         VO2_meas <- mean(data$recalc_vo2) * 1000
@@ -362,6 +359,9 @@ compute_infusion_summary <- function(data, tag_label, settings, ...) {
         VO2_exp <- mean(VO2_exp)
         VCO2_exp <- mean(VCO2_exp)
     }
+    
+    EE_exp <- (vo2_exp * VO2_exp + vco2_exp * VCO2_exp)
+    RQ_exp <- VCO2_exp / VO2_exp
   
     VO2_err <- (VO2_meas - VO2_exp) / VO2_exp * 100
     VCO2_err <- (VCO2_meas - VCO2_exp) / VCO2_exp * 100
