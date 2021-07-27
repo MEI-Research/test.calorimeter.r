@@ -5,6 +5,7 @@ apply_haldane <- function(data, params, ...) {
   {
     stop("No data sent, check tags and period!")
   }
+  
   # Trim extra uploads
   #trimarr <- min(which(unparsed$calrq$Time == max(unparsed$calrq$Time)))
   #data$calrq <- unparsed$calrq[1:trimarr, ]
@@ -99,6 +100,7 @@ apply_haldane <- function(data, params, ...) {
 #'@export
 deriv_haldane <- function(data, params, ...) {
   haldane <- data$sloped
+  
   # aldane$Time <- as.POSIXlt(haldane$Time, format = "%Y-%m-%dT%H:%M:%SZ")
   # stop(haldane$Time)
   haldane <- haldane[order(haldane$Time), ]
@@ -273,6 +275,11 @@ deriv_haldane <- function(data, params, ...) {
   # Convert from 24h to minutely
   # n2_df$value <- n2_df$value / (60*24)
   
+  if (grepl("infusion", params$type, ignore.case = TRUE)) {
+    message("using config: infusion")
+    ret <-
+      calc_infusion(haldane, params$settings, cal_seconds, n2_df = n2_df)
+  } else {
   if (grepl("push", config, ignore.case = TRUE)) {
     message("using config: push")
     ret <-
@@ -281,6 +288,7 @@ deriv_haldane <- function(data, params, ...) {
     message("using config: pull")
     ret <-
       calc_pull(haldane, cal_volume, cal_seconds, n2_df = n2_df)
+  }
   }
   
   list(haldane = ret, event_tags = event_tags)
@@ -487,6 +495,195 @@ calc_pull <- function(data, volume, cal_seconds, n2_df) {
   
   data$recalc_rq_0vol <-
     data$recalc_vco2_0vol / data$recalc_vo2_0vol
+  
+  data
+}
+
+calc_infusion <- function(data, settings, cal_seconds, n2_df) {
+  ## Add nitrogen column; datetime is start datetime for each collection
+  if (n2_df == -1) {
+    data$nitrogen <- 0
+  }
+  else if (!length(n2_df)) {
+    stop("N2 Values not set in participant variables")
+  }
+  else {
+    data$nitrogen <- n2_df$value[1]
+    if (length(n2_df) > 1) {
+      for (i in 2:nrow(n2_df)) {
+        data$nitrogen[as.POSIXct(data$timestamp, format = "%Y-%m-%dT%H:%M:%SZ") >= n2_df$datetime[i]] <-
+          n2_df$value[i]
+      }
+    }
+  }
+  
+  vo2_exp <- 3.941
+  vco2_exp <- 1.104
+  
+  vo2_constant <- 3.941
+  vco2_constant <- 1.104
+  nitrogen_constant <- -2.17
+  
+  # Create array of mean MFC values
+  mfcarray <- c(mean(as.numeric(data$MFCFlow_1)),
+                mean(as.numeric(data$MFCFlow_2)),
+                mean(as.numeric(data$MFCFlow_3)),
+                mean(as.numeric(data$MFCFlow_4)))
+  
+  # If CO2 MFC is not set, set to second largest flow
+  if (as.character(pilr.utils.r::get_setting("CO2_MFC",settings)) == "list()"){
+    # settings$CO2_MFC$value <- paste('MFC',order(mfcarray,decreasing=T)[2])
+    # message("Auto-detected CO2 MFC")
+    stop("CO2 MFC not set: check participant settings")
+  }
+  
+  # If N2 MFC is not set, set to largest flow
+  if (as.character(pilr.utils.r::get_setting("N2_MFC",settings)) == "list()"){
+    # settings$N2_MFC$value <- paste('MFC',order(mfcarray,decreasing=T)[1])
+    # message("Auto-detected N2 MFC")
+    stop("N2 MFC not set: check participant settings")
+  }
+  
+  mfc <- get_mfc_data(data, pilr.utils.r::get_setting("CO2_MFC", settings) %>%
+                        as.character,
+                      pilr.utils.r::get_setting("N2_MFC", settings) %>%
+                        as.character)
+  
+  config <- pilr.utils.r::get_setting("configuration",
+                                      settings)
+  volume <- pilr.utils.r::get_setting("volume",
+                                      settings)
+  
+  if (pilr.utils.r::has_setting("expected",
+                                settings)){
+    expected <- pilr.utils.r::get_setting("expected",
+                                          settings)  
+  } else if (config == 'Push - Absolute' | config == 'Push - Differential') {
+    expected <- "Push - Convert to Pull"
+    message("No equation configuration found - using Push -> Pull conversion method")
+  } else {
+    expected <- "Pull - Normal"
+    message("No equation configuration found - using Pull method")
+  }
+  #
+  
+  
+  # Determine form of equations/expected and execute
+  if(grepl("Push - Corrected Derivative", expected, ignore.case = TRUE)) {
+    if(grepl("push", config, ignore.case = TRUE)) {
+      message("using config: push, using expected: corrected derivative")
+      
+      # Push Method
+      data$VO2_exp <- ((data$InflowRate * data$nulled_inflow_o2 * mfc$N2)/(mfc$N2 * 100 + data$InflowRate * data$nulled_inflow_n2)) * 1000
+      data$VCO2_exp <- ((data$InflowRate * (data$nulled_inflow_co2 * mfc$N2 - mfc$CO2 * data$nulled_inflow_n2)) / (-mfc$N2 * 100 - data$InflowRate * data$nulled_inflow_n2)) * 1000
+      
+      # Derivative correction
+      d_corr <- (data$InflowRate - data$VO2_exp/1000 + data$VCO2_exp/1000) / (data$InflowRate + mfc$N2 + mfc$CO2)
+      
+      # Recalc VO2 VCO2
+      data$haldane_outflow <- ( data$InflowRate * (data$nulled_inflow_n2/100) - (data$dn2/100) * volume * d_corr) / (data$nulled_outflow_n2/100)
+      data$haldane_outflow_0vol <- ( data$InflowRate * (data$nulled_inflow_n2/100) ) / (data$nulled_outflow_n2/100)
+      
+      data$recalc_vo2 <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow * data$nulled_outflow_o2 - data$do2 * volume * d_corr)
+      data$recalc_vco2 <- -10/1000 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow * data$nulled_outflow_co2 - data$dco2 * volume * d_corr)
+      
+      data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
+                         vco2_constant * data$recalc_vco2)) +
+       (nitrogen_constant * data$nitrogen / 1440)
+      
+      data$recalc_rq <- data$recalc_vco2 / data$recalc_vo2
+      
+      # 0 vol eqns
+      data$recalc_vo2_0vol <- 10/1000 * (data$InflowRate * data$nulled_inflow_o2 - data$haldane_outflow_0vol * data$nulled_outflow_o2)
+      data$recalc_vco2_0vol <- -10/1000 * (data$InflowRate * data$nulled_inflow_co2 - data$haldane_outflow_0vol * data$nulled_outflow_co2)
+      
+      data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
+                                 vco2_constant * data$recalc_vco2_0vol)) +
+        (nitrogen_constant * data$nitrogen / 1440)
+      
+      data$recalc_rq_0vol <- data$recalc_vco2_0vol / data$recalc_vo2_0vol
+      
+    } else {
+      stop("wrong expected equations for pull calorimeter")
+    }
+  } else if(grepl("Push - Convert to Pull", expected, ignore.case = TRUE)) {
+    if(grepl("push", config, ignore.case = TRUE)) {
+      message("using config: push, using expected: converted to pull")
+      
+      # Calculate 'Outflow Rate'
+      data$OutflowRate = data$InflowRate + mfc$N2 + mfc$CO2
+      
+      # Pull Method
+      data$VO2_exp <- ((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_n2) * 1000
+      data$VCO2_exp <- ((mfc$CO2 * data$nulled_inflow_n2 - mfc$N2 * data$nulled_inflow_co2) / data$nulled_inflow_n2) * 1000
+      
+      # Recalc VO2 VCO2
+      data$haldane_inflow <- ( data$OutflowRate * (data$nulled_outflow_n2/100) + (data$dn2/100) * volume) / (data$nulled_inflow_n2/100)
+      data$haldane_inflow_0vol <- ( data$OutflowRate * (data$nulled_outflow_n2/100) ) / (data$nulled_inflow_n2/100)
+      
+      data$recalc_vo2 <- 10/1000 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$do2 * volume)
+      data$recalc_vco2 <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_co2 - data$OutflowRate * data$nulled_outflow_co2 - data$dco2 * volume)
+      
+      data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
+                            vco2_constant * data$recalc_vco2)) +
+        (nitrogen_constant * data$nitrogen / 1440)
+      
+      data$recalc_rq <- data$recalc_vco2 / data$recalc_vo2
+      
+      # 0 vol eqns
+      data$recalc_vo2_0vol <- 10/1000 *(data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2)
+      data$recalc_vco2_0vol <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_co2 - data$OutflowRate * data$nulled_outflow_co2)
+      
+      data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
+                                 vco2_constant * data$recalc_vco2_0vol)) +
+        (nitrogen_constant * data$nitrogen / 1440)
+      
+      data$recalc_rq_0vol <- data$recalc_vco2_0vol / data$recalc_vo2_0vol
+      
+    } else {
+      stop("wrong expected equations for pull calorimeter")
+    }
+  } else if(grepl("Pull - Normal", expected, ignore.case = TRUE)) {
+    if(grepl("pull", config, ignore.case = TRUE)) {
+      message("using config: pull, using expected: pull normal")
+      
+      # Pull Method
+      data$VO2_exp <- ((data$nulled_inflow_o2 * mfc$N2)/data$nulled_inflow_n2) * 1000
+      data$VCO2_exp <- ((mfc$CO2 * data$nulled_inflow_n2 - mfc$N2 * data$nulled_inflow_co2) / data$nulled_inflow_n2) * 1000
+      
+      # Recalc VO2 VCO2
+      data$haldane_inflow <- ( data$OutflowRate * (data$nulled_outflow_n2/100) + (data$dn2/100) * volume) / (data$nulled_inflow_n2/100)
+      data$haldane_inflow_0vol <- ( data$OutflowRate * (data$nulled_outflow_n2/100) ) / (data$nulled_inflow_n2/100)
+      
+      data$recalc_vo2 <- 10/1000 * (data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$do2 * volume)
+      data$recalc_vco2 <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_co2 - data$OutflowRate * data$nulled_outflow_co2 - data$dco2 * volume)
+      
+      data$recalc_ee <- ((vo2_constant * data$recalc_vo2 +
+                            vco2_constant * data$recalc_vco2)) +
+        (nitrogen_constant * data$nitrogen / 1440)
+      
+      data$recalc_rq <- data$recalc_vco2 / data$recalc_vo2
+      
+      # 0 vol eqns
+      data$recalc_vo2_0vol <- 10/1000 *(data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2)
+      data$recalc_vco2_0vol <- -10/1000 * (data$haldane_inflow * data$nulled_inflow_co2 - data$OutflowRate * data$nulled_outflow_co2)
+      
+      data$recalc_ee_0vol <- ((vo2_constant * data$recalc_vo2_0vol +
+                                 vco2_constant * data$recalc_vco2_0vol)) +
+        (nitrogen_constant * data$nitrogen / 1440)
+      
+      data$recalc_rq_0vol <- data$recalc_vco2_0vol / data$recalc_vo2_0vol
+      
+    } else {
+      stop("wrong expected equations for push calorimeter")
+    }
+  } else {
+    message("using approximate equations, please update settings")
+    # Use old eqns
+    # Expected values
+    data$VO2_exp <- (( data$nulled_inflow_o2 * (mfc$CO2 + mfc$N2)) / 100) * 1000
+    data$VCO2_exp <- (mfc$CO2) * 1000
+  }
   
   data
 }
