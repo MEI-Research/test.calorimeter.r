@@ -2,6 +2,10 @@
 #'@export
 #'@import jsonlite dplyr ggvis uuid
 process_cal_human <- function(data, params, ...) { 
+  # Trim extra uploads
+  #trimarr <- min(which(unparsed$calrq$Time == max(unparsed$calrq$Time)))
+  #data$calrq <- unparsed$calrq[1:trimarr, ]
+  #data$event_tags <- unparsed$event_tags
 
   message('Starting human summary job')
   
@@ -42,6 +46,8 @@ process_cal_human <- function(data, params, ...) {
     equation <- "Updated"
     # equation <- "Old"
   }
+  
+  params$type <- "human"
   
   if (equation == "Updated" || equation == "[Updated]"){
     message("Using updated equations")

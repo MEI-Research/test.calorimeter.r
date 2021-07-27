@@ -16,6 +16,8 @@ apply_haldane <- function(data, params, ...) {
   data$calrq <- data$calrq[1:trimarr, ]
   message('Trimming Data')
   
+  params$type <- "haldane"
+  
   haldane <- apply_null_offset(data, params) %>%
     apply_slope_offset(params) %>%
     deriv_haldane(params)
