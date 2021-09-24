@@ -451,7 +451,7 @@ calc_pull <- function(data, volume, cal_seconds, n2_df) {
   
   data$recalc_vco2 <-
     -10 / 1000 * (
-      data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2 - data$dco2 * volume
+      data$haldane_inflow * data$nulled_inflow_co2 - data$OutflowRate * data$nulled_outflow_co2 - data$dco2 * volume
     )
   
   ## calc VO2 and VCO2 in ml/min
@@ -485,7 +485,7 @@ calc_pull <- function(data, volume, cal_seconds, n2_df) {
   
   data$recalc_vco2 <-
     -10 * (
-      data$haldane_inflow * data$nulled_inflow_o2 - data$OutflowRate * data$nulled_outflow_o2
+      data$haldane_inflow * data$nulled_inflow_co2 - data$OutflowRate * data$nulled_outflow_co2
     )
   
   ## already divided by 1000
