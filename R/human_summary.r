@@ -156,7 +156,7 @@ process_cal_human <- function(data, params, ...) {
             "nulled_outflow_co2", "nulled_inflow_o2",
             "nulled_inflow_co2", "do2", "dco2", "inflow_rate",
             "outflow_rate", "id", "pt", "timestamp", "nitrogen",
-            "np_rq", "protein_ox", "cho_ox", "fat_ox", "haldane", "recalc_vo2")
+            "np_rq", "protein_ox", "cho_ox", "fat_ox", "recalc_vo2")
   
   
   ## return two datasets
